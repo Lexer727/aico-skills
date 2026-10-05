@@ -57,24 +57,28 @@ MERGE (c)-[:IMPLEMENTS]->(r)
 ## 3. Process
 
 1. **Pick the Active Red Test**: Focus strictly on the test file produced by `/aico-test-scaffolding`.
-2. **Write Minimal Code**: Implement the logic behind the designated seam.
-3. **Attach `@implements` Tags**: Annotate the relevant public symbols.
-4. **Execute Verification**:
+2. **Transition Plan & Task to In Progress**:
+   - Ensure `PLAN-*.md` frontmatter has `status: "In Progress"`.
+   - Update current task in `PLAN-*.md` to `- **Status**: In Progress`.
+3. **Write Minimal Code**: Implement the logic behind the designated seam.
+4. **Attach `@implements` Tags**: Annotate the relevant public symbols.
+5. **Execute Verification**:
    - Run the local test runner until the suite turns **GREEN**.
    - Run local linters and typecheckers.
-5. **Update Task & Advance Frontier**:
-   - Mark the current task completed in `PLAN-*.md`.
+6. **Update Task & Advance Frontier**:
+   - In `PLAN-*.md`, set current task to `- **Status**: Done`.
+   - If a task is replaced or canceled due to architectural change, set `- **Status**: Rewritten` or `- **Status**: Skipped/Canceled` with mandatory `- **Reason**: ...` and `- **Rewrite Target**: ...`.
    - Update Kùzu task state (`SET t.status = 'completed'`).
    - Query Kùzu for newly unblocked tasks:
      ```cypher
      MATCH (t:Task)
-     WHERE t.status = "ready" 
+     WHERE t.status IN ["pending", "ready"] 
        AND NOT EXISTS { MATCH (b:Task)-[:BLOCKS]->(t) WHERE b.status <> "completed" }
      RETURN t
      ```
-6. **Next Step**:
+7. **Next Step**:
    - If tasks remain on the frontier: Repeat with `/aico-test-scaffolding`.
-   - If all tasks are completed: Advance to **`/aico-review-loop`**.
+   - If all tasks are completed: Set `status: "Completed"` in frontmatter of `PLAN-*.md` and `SPEC-*.md`, then advance to **`/aico-review-loop`**.
 
 ---
 
@@ -82,4 +86,5 @@ MERGE (c)-[:IMPLEMENTS]->(r)
 - [ ] All tests pass (GREEN).
 - [ ] Linter and compiler checks pass clean.
 - [ ] In-band `@implements` annotations attached.
-- [ ] Task marked completed and active frontier updated.
+- [ ] Task marked with structured `Status: Done` (or `Rewritten`/`Skipped/Canceled` with reason).
+- [ ] Active frontier updated.

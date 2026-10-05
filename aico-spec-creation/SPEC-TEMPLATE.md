@@ -1,9 +1,15 @@
-# Feature Specification: {Title}
+---
+id: SPEC-{domain}-{seq}
+type: spec
+aico_version: "0.1.1"
+epic: "{epic-slug}"
+title: "{Title}"
+status: Draft
+derives_from: ["BRAIN-...", "ADR-..."]
+created_at: "{YYYY-MM-DDTHH:MM:SSZ}"
+---
 
-- **ID**: SPEC-{domain}-{seq}
-- **Domain**: {domain}
-- **Status**: Draft | Approved
-- **Derives From**: [BRAIN-{domain}-{seq}, DIVE-{domain}-{seq}]
+# Feature Specification: {Title}
 
 ## 1. Problem Statement & User Value
 Describe the user problem and the measurable value delivered by this feature from the user perspective.

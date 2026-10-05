@@ -1,6 +1,6 @@
 ---
 name: aico-planning
-description: "Decompose specifications into a Directed Acyclic Graph (DAG) of vertical tracer-bullet tasks, declaring explicit blocking dependencies and computing the active frontier."
+description: "Decompose specifications into a Directed Acyclic Graph (DAG) of vertical tracer-bullet tasks, declaring explicit blocking dependencies, structured task statuses, and computing the active frontier."
 disable-model-invocation: false
 ---
 
@@ -10,13 +10,21 @@ Decompose specifications into an executable **task graph (DAG)** of vertical tra
 
 ---
 
-## 1. Vertical Tracer-Bullet Rules
+## 1. Vertical Tracer-Bullet & Task Rules
 
 Break the work down using tracer-bullet vertical slices:
 - **Vertical, not horizontal**: Each slice cuts a narrow path through every necessary layer (schema $\to$ logic $\to$ API $\to$ test), rather than doing "all schemas first, then all APIs".
 - **Self-contained context**: Sized to fit comfortably in a single agent context window.
 - **Traceable**: Every task must explicitly declare which `REQ-###` identifiers it addresses.
 - **Prefactoring first**: "Make the change easy, then make the easy change." Prefactoring tasks are scheduled before feature tasks.
+- **Structured Task Statuses**:
+  - `Pending`: Unblocked and queued for work.
+  - `Blocked`: Waiting on dependency tasks.
+  - `In Progress`: Actively being implemented or scaffolded.
+  - `Done`: Implementation and tests verified green.
+  - `Skipped/Canceled`: Explicitly discarded with mandatory `- **Reason**: ...`.
+  - `Rewritten`: Replaced by an updated task with mandatory `- **Reason**: ...` and `- **Rewrite Target**: ...`.
+- **Non-Destructive Task Mutations**: Never delete or silently overwrite outdated tasks. Maintain full historical intent and audit trails.
 
 ### Wide Refactor Exception: Expand–Contract
 For widespread mechanical changes (renaming types, altering core IPC protocols), do not attempt a single vertical slice:
@@ -33,13 +41,13 @@ Examine `SPEC-*.md` and identify the end-to-end paths required to satisfy all `R
 
 ### Step 2: Establish Blocking Edges (DAG)
 Assign explicit dependency prerequisites (`blocked_by: [TASK-001, ...]`).
-- A task with no blockers can start immediately.
+- A task with no blockers can start immediately (`status: "Pending"`).
 - Never introduce circular dependencies.
 
 ### Step 3: Register Task Graph
 In AICO, task nodes and blocking edges are committed to Kùzu:
 ```cypher
-MERGE (t:Task {id: $task_id, title: $title, status: "ready"})
+MERGE (t:Task {id: $task_id, title: $title, status: "pending"})
 MERGE (r:Requirement {id: $req_id})
 MERGE (t)-[:ADDRESSES]->(r)
 WITH t
@@ -52,7 +60,7 @@ MERGE (b)-[:BLOCKS]->(t)
 Query the unblocked tasks ready for immediate execution:
 ```cypher
 MATCH (t:Task)
-WHERE t.status = "ready" AND NOT ()-[:BLOCKS]->(t)
+WHERE t.status IN ["pending", "ready"] AND NOT ()-[:BLOCKS]->(t)
 RETURN t
 ```
 
@@ -74,6 +82,9 @@ mcp_call:
 
 ## Completion Criteria
 - [ ] 100% of EARS `REQ-###` mapped to at least one task.
+- [ ] Mandatory YAML frontmatter at line 1 (`type: plan`, `aico_version: "0.1.1"`).
 - [ ] Explicit `blocked_by` dependencies declared for all tasks.
+- [ ] All task nodes have explicit `Status` fields.
+- [ ] Any canceled or rewritten tasks include `Reason` and `Rewrite Target`.
 - [ ] Initial active frontier computed and displayed.
-- [ ] Artifact committed.
+- [ ] Artifact committed with relative markdown links.

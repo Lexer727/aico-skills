@@ -1,6 +1,6 @@
 ---
 name: aico-spec-creation
-description: "Draft unambiguous, testable feature specifications using strict EARS syntax patterns, immutable requirement IDs, and explicit out-of-scope boundaries."
+description: "Draft unambiguous, testable feature specifications using strict EARS syntax patterns, immutable requirement IDs, universal YAML frontmatter, relative linking, and explicit out-of-scope boundaries."
 disable-model-invocation: false
 ---
 
@@ -26,7 +26,20 @@ Every functional requirement **must strictly conform** to one of the 5 canonical
 
 ---
 
-## 2. Process
+## 2. Blueprint & Schema Rules
+
+1. **Mandatory Line-1 YAML Frontmatter**: Must include `id`, `type: spec`, `aico_version: "0.1.1"`, `epic`, `title`, `status`, `derives_from`, and `created_at`.
+2. **Lifecycle Status Progression**:
+   - `Draft`: During authoring and refinement.
+   - `Pending`: Approved and queued for planning/implementation.
+   - `In Progress`: Actively being coded or verified.
+   - `Completed`: All requirements verified with green seam tests.
+3. **No Duplicated Body Metadata**: Never repeat `ID`, `Status`, `Derives From`, or `Title` beneath the top markdown heading. The document body contains only domain content and requirements.
+4. **Strict Relative Linking**: All markdown references to other specifications, ADRs, or plans must use portable relative paths (e.g. `../../adr/0001-...md`), never machine-specific `file:///` URLs.
+
+---
+
+## 3. Process
 
 ### Step 1: Ingest Context
 Load the parent brainstorm (`BRAIN-*.md`), deep-dive (`DIVE-*.md`), and `GLOSSARY.md`. Verify that all domain terms match the canonical glossary.
@@ -65,7 +78,10 @@ mcp_call:
 ---
 
 ## Completion Criteria
+- [ ] Mandatory YAML frontmatter at line 1 (`aico_version: "0.1.1"`).
+- [ ] Zero duplicate metadata attributes in the markdown body.
 - [ ] 100% of functional requirements conform to EARS grammar with stable IDs (`REQ-###`).
+- [ ] All cross-document links use portable relative paths.
 - [ ] Out of Scope section populated with explicit boundaries.
 - [ ] Designated test seams documented.
 - [ ] Artifact committed with provenance references to brainstorm and deep-dive.

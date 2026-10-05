@@ -1,13 +1,21 @@
 # Architecture Decision Record (ADR) Format
 
-File path convention: `docs/adr/{NNNN}-{kebab-case-title}.md` (e.g., `docs/adr/0001-embedded-kuzu-graph-storage.md`).
+File path convention: `adr/{NNNN}-{kebab-case-title}.md` (e.g., `adr/0001-host-runtime-and-network-topology.md`).
+
+All ADRs must begin with a canonical YAML frontmatter block on line 1 without duplicating fields in the body.
 
 ```markdown
-# ADR-{NNNN}: {Decision Title}
+---
+id: ADR-{NNNN}
+type: adr
+aico_version: "0.1.1"
+title: "{Decision Title}"
+status: Completed
+derives_from: []
+created_at: "{YYYY-MM-DDTHH:MM:SSZ}"
+---
 
-- **Status**: {proposed | accepted | deprecated | superseded by ADR-XXXX}
-- **Date**: {YYYY-MM-DD}
-- **Deciders**: {Agent, Human Developer}
+# ADR-{NNNN}: {Decision Title}
 
 ## Context & Problem Statement
 What is the situation and problem we are facing? State the forces at play (technical, organizational, performance).
