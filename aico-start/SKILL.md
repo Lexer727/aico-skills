@@ -32,8 +32,15 @@ disable-model-invocation: false
                     ▼                                 ▼
              ┌─────────────┐                   ┌──────────────┐
              │ /aico-epic  │                   │ /aico-feature│
-             │ (EC-slug)   │                   │ (Standalone) │
-             └─────────────┘                   └──────────────┘
+             │ (ec-slug)   │                   │ (ft-slug)    │
+             └──────┬──────┘                   └──────────────┘
+                    │ (internally calls /aico-feature
+                    │  for each child feature)
+                    ▼
+             ┌──────────────┐
+             │ /aico-feature│
+             │ (child ft-)  │
+             └──────────────┘
 ```
 
 ---
@@ -63,19 +70,20 @@ Evaluate against the triage criteria:
 
 | Criterion | Choose **Epic (`/aico-epic`)** | Choose **Standalone Feature (`/aico-feature`)** |
 | :--- | :--- | :--- |
-| **Scope & Breadth** | Multi-subsystem initiative (e.g. Host Runtime + Embedded DBs + WebUI Shell). | Cohesive single-capability (e.g. Export tool, CLI flag, Auth provider plugin). |
-| **Milestone Decomposition** | Requires multiple specifications and multi-milestone convergence. | Single contract specification and single task execution DAG. |
-| **Cross-Cutting Consensus** | Requires an overarching shared brainstorm (`BRAIN-EC-*.md`) across child specs. | Self-contained domain boundaries and invariants. |
-| **Filesystem Target** | `<specs-root>/epics/EC-<short_id>/features/` | `<specs-root>/features/<feature-slug>/` |
-| **Frontmatter Epic Tag** | `epic: "EC-<short_id>"` | `epic: null` |
+| **Scope & Breadth** | Multi-subsystem initiative (e.g. Host Runtime + Embedded DBs + WebUI Shell). | Cohesive single-capability (e.g. Export tool, Fast Trace validator, CLI flag). |
+| **Milestone Decomposition** | Requires multiple child features and multi-milestone convergence. | Single contract specification and single task execution DAG. |
+| **Cross-Cutting Consensus** | Requires an overarching shared brainstorm (`brain-ec-*.md`) across child specs. | Self-contained domain boundaries and invariants. |
+| **Filesystem Target** | `<specs-root>/epics/ec-<short_id>/features/ft-.../` | `<specs-root>/features/ft-<feature_slug>/` |
+| **Frontmatter Epic Tag** | `epic: "ec-<short_id>"` | `epic: null` |
+| **Feature Prefix** | Child features use `ft-` | Standalone features use `ft-` |
 
 ### Step 4: Routing & Handoff
 - **If Epic**:
   - Summarize the high-level concept and overarching trade-offs.
-  - Propose a concise identifier: `EC-{short_id}` (e.g. `EC-core`, `EC-specs`, `EC-workspace`).
+  - Propose a concise identifier: `ec-{short_id}` (e.g. `ec-core`, `ec-specs`, `ec-workspace`).
   - Handoff to `/aico-epic` passing the gathered brainstorm context.
 - **If Standalone Feature**:
-  - Summarize the atomic scope, designated seams, and target directory (`features/<feature-slug>/`).
+  - Summarize the atomic scope, designated seams, and target directory (`features/ft-<feature_slug>/`).
   - Handoff to `/aico-feature` passing the requirements context.
 
 ---

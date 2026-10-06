@@ -1,94 +1,135 @@
 ---
 name: aico-feature
-description: "Scaffold, design, and orchestrate a standalone feature without an epic container. Manages deep-dive blast radius, EARS specification drafting with epic: null, and vertical tracer-bullet task DAG planning."
+description: "Universal atomic engine for feature scaffolding, specification, and execution (both standalone features and child features inside epics). Enforces ft- naming, optional epic container binding, EARS specifications, and vertical tracer-bullet task DAG planning with flexible internal execution waves."
 disable-model-invocation: false
 ---
 
-# AICO Feature: Standalone Feature Scaffolding & Orchestration
+# AICO Feature: Universal Feature Scaffolding & Orchestration
 
-`aico-feature` is used to create and orchestrate **Standalone Features** that operate outside an epic container. Standalone features are self-contained capabilities, utilities, extensions, or bug-fix refactors that live directly under `<specs-root>/features/<feature-slug>/`.
+`aico-feature` is the **single atomic engine** for creating, specifying, and orchestrating any feature in an AICO repository. It handles both:
+1. **Standalone Features**: Self-contained capabilities living at `<specs-root>/features/ft-<feature_slug>/` (`epic: null`).
+2. **Epic Child Features**: Subsystem milestones living at `<specs-root>/epics/ec-<short_id>/features/ft-<feature_slug>/` (`epic: "ec-<short_id>"`), invoked directly by **`/aico-epic`**.
 
 ---
 
 ## 1. Blueprint & Artifact Rules
 
-1. **Top-Level Placement**: Standalone features live at `<specs-root>/features/<feature-slug>/` (not inside `epics/`).
-2. **Universal Line-1 YAML Frontmatter**: Must include `id: SPEC-{feature-slug}`, `type: spec`, `aico_version: "0.1.2"`, `epic: null`, `order: <number>`, `title`, `status`, `derives_from`, and `created_at`.
-3. **Decoupled Ordering**: Use the frontmatter `order: <number>` attribute for visual sequence. Do not prefix folder names with numbers (use `features/export-pdf/`, not `features/01-export-pdf/`).
-4. **Wave-Internal Task Execution**: Implementation tasks within `PLAN-{feature-slug}.md` must declare their internal execution waves:
+1. **Mandatory `ft-` Feature Prefix**: Every feature folder and identifier must start with `ft-` (e.g. `features/ft-fast-trace/`, `features/ft-core-discovery/`). Never prefix with numbers like `01-`.
+2. **Container Placement**:
+   - **Standalone**: `<specs-root>/features/ft-<feature_slug>/`
+   - **Epic Child**: `<specs-root>/epics/ec-<short_id>/features/ft-<feature_slug>/`
+3. **Canonical Artifact Naming**:
+   - Specification: `spec-ft-<feature_slug>.md` (Frontmatter `id: spec-ft-<feature_slug>`)
+   - Implementation Plan: `plan-ft-<feature_slug>.md` (Frontmatter `id: plan-ft-<feature_slug>`)
+   - Brainstorm (optional): `brain-ft-<feature_slug>.md`
+   - Deep Dive (optional): `dive-ft-<feature_slug>.md`
+4. **Universal Line-1 YAML Frontmatter**: Must include:
+   - `id`: `spec-ft-<feature_slug>` (or `plan-ft-<feature_slug>`)
+   - `type`: `spec` | `plan`
+   - `aico_version`: `"0.1.2"`
+   - `epic`: `"ec-<short_id>"` (if child feature) or `null` (if standalone)
+   - `order`: `<integer>` (governs visual sort sequence)
+   - `title`: Human-readable capability title
+   - `status`: `Draft` | `Pending` | `In Progress` | `Completed`
+   - `derives_from`: List of derived ADR IDs, Brainstorm IDs, or parent Epic IDs
+   - `created_at`: ISO 8601 UTC timestamp
+5. **Vertical Tracer-Bullet Tasks with Flexible Internal Waves**: Implementation tasks within `plan-ft-<feature_slug>.md` represent vertical slices. Inside each task, execution is broken down into flexible execution waves chosen from:
    - **Wave 1 (Scaffolding)**: Red interface contracts and failing seam tests (`@verifies REQ-###`).
    - **Wave 2 (Implementation)**: Minimal green code turning seam tests green (`@implements REQ-###`).
-   - **Wave 3 (Verification)**: Error edge cases, security invariants, and contract hardening.
-   - **Wave 4 (Integration / Human Gate)**: End-to-end integration and user verification.
+   - **Wave 3 (Verification)**: Error edge cases, security invariants, benchmarks, and contract hardening.
+   - **Wave 4 (Integration / Human Gate)**: End-to-end integration, UI wiring, and user verification.
+   *Note: Waves are optional per task; a task only declares the waves it actually requires.*
 
 ---
 
-## 2. Process
+## 2. Invocation Context & Parameters
+
+When invoked, `aico-feature` accepts:
+- **`slug`**: The feature identifier (e.g. `fast-trace` or `core-discovery`). The tool ensures the `ft-` prefix (`ft-<slug>`).
+- **`epic`** *(optional)*: Parent epic identifier (e.g. `ec-core`). If omitted or `null`, the feature is treated as standalone.
+- **`target_dir`** *(optional)*: Override target directory path. Defaults to `<specs-root>/features/ft-<slug>/` for standalone, or `<specs-root>/epics/ec-<epic>/features/ft-<slug>/` for epic children.
+- **`derives_from`** *(optional)*: List of parent documents (e.g. `["brain-ec-core"]`).
+
+---
+
+## 3. Process
 
 ```
-From /aico-start ───> /aico-feature ───> /aico-deep-dive ───> /aico-spec-creation ───> /aico-planning
-                     (Scaffold Container) (Blast Radius)       (SPEC-*.md, epic:null)    (PLAN-*.md with waves)
+/aico-feature (Atomic Engine)
+       │
+       ├── 1. Resolve Path: features/ft-<slug>/ OR epics/ec-<id>/features/ft-<slug>/
+       │
+       ├── 2. /aico-deep-dive (Analyze subsystem boundaries, blast radius & test seams)
+       │
+       ├── 3. /aico-spec-creation (Draft spec-ft-<slug>.md with EARS requirements)
+       │
+       ├── 4. /aico-planning (Draft plan-ft-<slug>.md with vertical tasks & flexible waves)
+       │
+       └── 5. Delivery Execution:
+              - /aico-test-scaffolding (Wave 1: Red tests @verifies)
+              - /aico-implementation    (Wave 2: Green domain code @implements)
+              - Hardening & Review     (Wave 3 & Wave 4)
 ```
 
 ### Step 1: Scaffold Feature Container
-1. Resolve `<specs-root>/features/<feature-slug>/` using a concise, descriptive kebab-case name (e.g. `features/export-pdf/`, `features/cli-auth/`).
-2. Create the directory.
+Create target directory:
+- Standalone: `<specs-root>/features/ft-<feature_slug>/`
+- Epic Child: `<specs-root>/epics/ec-<short_id>/features/ft-<feature_slug>/`
 
 ### Step 2: System Boundary & Blast Radius Analysis
-1. Invoke **`/aico-deep-dive`** on the specific target subsystem:
-   - Identify touched crates, modules, and public exports.
-   - Designate primary and secondary test seams.
-   - (Optional) Save `DIVE-{feature-slug}.md` inside the feature directory if non-trivial architectural boundaries exist.
+Invoke **`/aico-deep-dive`**:
+- Identify touched crates, modules, and public exports.
+- Designate primary and secondary test seams.
+- (Optional) Save `dive-ft-<feature_slug>.md` if non-trivial architectural boundaries exist.
 
 ### Step 3: Draft Formal EARS Specification
-1. Invoke **`/aico-spec-creation`**:
-   - Write `<specs-root>/features/<feature-slug>/SPEC-{feature-slug}.md`.
-   - Set YAML frontmatter:
-     ```yaml
-     ---
-     id: SPEC-{feature-slug}
-     type: spec
-     aico_version: "0.1.2"
-     epic: null
-     order: 1
-     title: "Feature Title"
-     status: Draft
-     derives_from: ["ADR-####"]
-     created_at: "YYYY-MM-DDTHH:MM:SSZ"
-     ---
-     ```
-   - Formulate EARS requirements (`REQ-001..`) conforming strictly to canonical grammar patterns.
-   - Designate public test seams in code.
+Invoke **`/aico-spec-creation`**:
+- Write `spec-ft-<feature_slug>.md` with frontmatter:
+  ```yaml
+  ---
+  id: spec-ft-<feature_slug>
+  type: spec
+  aico_version: "0.1.2"
+  epic: <"ec-id" | null>
+  order: 1
+  title: "<Feature Title>"
+  status: Draft
+  derives_from: [<"brain-ec-id" | ADR>]
+  created_at: "YYYY-MM-DDTHH:MM:SSZ"
+  ---
+  ```
+- Formulate testable EARS requirements (`REQ-001..`) conforming strictly to canonical grammar patterns.
+- Designate public test seams in code.
 
 ### Step 4: Decompose into Task Plan DAG
-1. Invoke **`/aico-planning`**:
-   - Write `<specs-root>/features/<feature-slug>/PLAN-{feature-slug}.md`.
-   - Set YAML frontmatter:
-     ```yaml
-     ---
-     id: PLAN-{feature-slug}
-     type: plan
-     aico_version: "0.1.2"
-     epic: null
-     order: 1
-     title: "Feature Implementation Plan"
-     status: Draft
-     derives_from: ["SPEC-{feature-slug}"]
-     created_at: "YYYY-MM-DDTHH:MM:SSZ"
-     ---
-     ```
-   - Structure tasks into vertical tracer bullets with explicit internal execution waves (Wave 1 Scaffolding $\to$ Wave 2 Implementation $\to$ Wave 3 Verification).
+Invoke **`/aico-planning`**:
+- Write `plan-ft-<feature_slug>.md` with frontmatter:
+  ```yaml
+  ---
+  id: plan-ft-<feature_slug>
+  type: plan
+  aico_version: "0.1.2"
+  epic: <"ec-id" | null>
+  order: 1
+  title: "<Feature Title> Implementation Plan"
+  status: Draft
+  derives_from: ["spec-ft-<feature_slug>"]
+  created_at: "YYYY-MM-DDTHH:MM:SSZ"
+  ---
+  ```
+- Structure tasks into vertical tracer bullets with flexible internal execution waves (Wave 1, 2, 3, and/or 4).
 
 ### Step 5: Test Scaffolding & Implementation
 1. Invoke **`/aico-test-scaffolding`** to write failing contract tests (`Wave 1`).
 2. Invoke **`/aico-implementation`** to write green code (`Wave 2`).
-3. Verify all tests pass green, run `/aico-review-loop`, and update status to `Completed`.
+3. Complete verification/hardening (`Wave 3`) and human gates (`Wave 4`) if declared.
+4. Run `/aico-review-loop` and update frontmatter status to `Completed`.
 
 ---
 
 ## Completion Criteria
-- [ ] Feature directory created at `<specs-root>/features/<feature-slug>/`.
-- [ ] Deep dive blast radius analyzed.
-- [ ] `SPEC-{feature-slug}.md` drafted with canonical frontmatter (`epic: null`).
-- [ ] `PLAN-{feature-slug}.md` drafted with 6-state tasks and internal execution waves.
-- [ ] Standalone feature visible in the AICO WebUI Feature Hub with `[Standalone]` badge.
+- [ ] Feature directory created with `ft-` prefix (`features/ft-<slug>/` or `epics/ec-<id>/features/ft-<slug>/`).
+- [ ] Deep dive blast radius analyzed and seams designated.
+- [ ] `spec-ft-<slug>.md` drafted with canonical frontmatter (`epic: "ec-<id>"` or `null`).
+- [ ] `plan-ft-<slug>.md` drafted with vertical tasks declaring flexible internal execution waves.
+- [ ] Visible in the AICO WebUI (Epic Hub or Standalone Feature Hub).

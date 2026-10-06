@@ -6,7 +6,7 @@ disable-model-invocation: false
 
 # AICO Spec Creation: Contract Synthesis & EARS Grammar
 
-Transform brainstorms and deep-dives into an immutable, verifiable contract specification (`SPEC-{prefix}-{slug}.md`).
+Transform brainstorms and deep-dives into an immutable, verifiable contract specification (`spec-ft-{slug}.md`).
 
 ---
 
@@ -29,10 +29,10 @@ Every functional requirement **must strictly conform** to one of the 5 canonical
 ## 2. Blueprint & Schema Rules
 
 1. **Mandatory Line-1 YAML Frontmatter**: Must include:
-   - `id`: `SPEC-{prefix}-{feature_suffix}` (or `SPEC-{feature_slug}` for standalone).
+   - `id`: `spec-ft-{feature_slug}` (e.g. `spec-ft-core-discovery`, `spec-ft-fast-trace`).
    - `type: spec`
    - `aico_version: "0.1.2"`
-   - `epic`: `"EC-{short_id}"` (or `null` if standalone).
+   - `epic`: `"ec-{short_id}"` (or `null` if standalone).
    - `order`: `<integer>` (governs visual sort sequence without altering directory names).
    - `title`: Human-readable capability title.
    - `status`: `Draft` | `Pending` | `In Progress` | `Completed`.
@@ -51,7 +51,7 @@ Every functional requirement **must strictly conform** to one of the 5 canonical
 ## 3. Process
 
 ### Step 1: Ingest Context
-Load the parent brainstorm (`BRAIN-EC-*.md` or single-feature brainstorm), deep-dive (`DIVE-*.md`), and `GLOSSARY.md`. Verify that all domain terms match the canonical glossary.
+Load the parent brainstorm (`brain-ec-*.md` or single-feature brainstorm), deep-dive (`dive-ft-*.md`), and `GLOSSARY.md`. Verify that all domain terms match the canonical glossary.
 
 ### Step 2: Formulate EARS Requirements
 - Translate each user story into atomic, testable requirements assigned sequential, stable identifiers (`REQ-001`, `REQ-002`, ...).
@@ -59,12 +59,21 @@ Load the parent brainstorm (`BRAIN-EC-*.md` or single-feature brainstorm), deep-
 - Ensure every `<system>` is explicitly named (e.g. `The HostDaemon shall...`, never passive `Files are watched`).
 - If an aspect is genuinely unknown, append `[NEEDS CLARIFICATION: <question>]`.
 
-### Step 3: Enforce Quality & Ambiguity Linting
-Audit your draft against the ambiguity checklist:
-- ❌ **No weak verbs**: Replace `handle`, `manage`, `process`, `support` with observable actions (`persist`, `render`, `emit`, `reject`).
-- ❌ **No unmeasurable adjectives**: Replace `fast`, `user-friendly`, `scalable` with concrete bounds (`under 10ms`, `within 1 second`).
-- ❌ **No non-EARS modals**: Reject `must`, `should`, `will`, `can`. Use only `shall`.
+### Step 3: Designate Test Seams
+Define explicit contract test seams:
+- Where in the codebase will this requirement be verified?
+- Tag unit and integration test functions with `@verifies spec-ft-<slug>::req-###`.
 
-### Step 4: Define Scope & Test Seams
-- Populate the **Out of Scope** section with everything explicitly rejected during brainstorming.
-- Designate primary and secondary code test seams (`crate::module::seam_function`).
+### Step 4: Define Negative & Boundary Cases
+Add at least one `Unwanted Behavior` pattern for:
+- Invalid input or malformed configurations.
+- Boundary condition limits (file sizes, memory limits, timeouts).
+- Authentication or authorization failures.
+
+---
+
+## Completion Criteria
+- [ ] Frontmatter includes canonical `spec-ft-<slug>` ID, `epic`, `order`, and `status`.
+- [ ] Every requirement follows strict EARS grammar with a single "shall".
+- [ ] Negative paths and edge cases addressed.
+- [ ] Public test seams designated.

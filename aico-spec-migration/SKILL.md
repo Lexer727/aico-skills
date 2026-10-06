@@ -1,6 +1,6 @@
 ---
 name: aico-spec-migration
-description: "Audit, normalize, and upgrade existing AICO Spec-Driven Development (SDD) repositories to target version 0.1.2. Enforces EC- epic naming, top-level and child features directories, frontmatter order attributes, relative links, and wave-internal task execution."
+description: "Audit, normalize, and upgrade existing AICO Spec-Driven Development (SDD) repositories to target version 0.1.2. Enforces ec- epic naming, ft- feature naming, frontmatter order attributes, relative links, and flexible wave-internal task execution."
 disable-model-invocation: false
 ---
 
@@ -20,10 +20,10 @@ Every migrated artifact must comply with these 6 mandatory rules:
 Every artifact file must start with a valid YAML frontmatter block on line 1:
 ```yaml
 ---
-id: <ARTIFACT-ID>
+id: <artifact-id>
 type: <spec|plan|brainstorm|deep_dive|adr>
 aico_version: "0.1.2"
-epic: "EC-<short_id>" # or null for standalone features / system ADRs
+epic: "ec-<short_id>" # or null for standalone features / system ADRs
 order: 1              # Integer sequence for UI and roadmap sorting
 title: "<Title>"
 status: <Draft|Pending|In Progress|Completed>
@@ -33,14 +33,16 @@ created_at: "<ISO-8601 Timestamp>"
 ```
 
 ### Rule 2: Directory & Naming Grammar (No Numeric Folder Prefixes)
-- **Epics**: `epics/EC-{short_id}/` (e.g. `epics/EC-core/`, `epics/EC-specs/`).
-- **Epic Brainstorm**: `BRAIN-EC-{short_id}.md`.
-- **Epic Features Directory**: `epics/EC-{short_id}/features/` (renamed from `specs/`).
-- **Child Feature Directory**: `features/{short_id}-{feature_suffix}/` (e.g. `features/core-host-runtime/`).
-- **Standalone Features**: Top-level `<specs-root>/features/{feature_slug}/` (e.g. `features/export-pdf/`).
+- **Epics**: `epics/ec-{short_id}/` (e.g. `epics/ec-core/`, `epics/ec-specs/`).
+- **Epic Brainstorm**: `brain-ec-{short_id}.md`.
+- **Epic Features Directory**: `epics/ec-{short_id}/features/` (renamed from `specs/`).
+- **Child Feature Directory**: `features/ft-{short_id}-{feature_suffix}/` (e.g. `features/ft-core-host-runtime/`).
+- **Standalone Features**: Top-level `<specs-root>/features/ft-{feature_slug}/` (e.g. `features/ft-fast-trace/`).
 - **Artifact Files**:
-  - `SPEC-{short_id}-{feature_suffix}.md` (or `SPEC-{feature_slug}.md`)
-  - `PLAN-{short_id}-{feature_suffix}.md` (or `PLAN-{feature_slug}.md`)
+  - `spec-ft-{feature_slug}.md`
+  - `plan-ft-{feature_slug}.md`
+  - `brain-ft-{feature_slug}.md` (optional)
+  - `dive-ft-{feature_slug}.md` (optional)
 
 ### Rule 3: Strict Relative Linking
 All markdown links pointing to internal artifacts, specs, plans, code files, or ADRs must use relative paths (e.g., `../../adr/0001-host-runtime-and-network-topology.md`).
@@ -50,42 +52,45 @@ All markdown links pointing to internal artifacts, specs, plans, code files, or 
 ### Rule 4: Single Source of Truth (Zero Duplicated Body Metadata)
 Never repeat fields defined in the frontmatter (`ID`, `Status`, `Derives From`, `Title`) under the top `# Title` heading.
 
-### Rule 5: 6-State Task Tracking with Wave-Internal Execution
-Implementation plan tasks replace simple checkboxes with explicit status fields and define internal execution waves:
+### Rule 5: Vertical Tasks with Flexible Wave-Internal Execution
+Implementation plan tasks replace simple checkboxes with explicit status fields and define flexible internal execution waves:
 ```markdown
 - **TASK-{prefix}-{suffix}-{seq}**: {Title}
   - **Status**: Done # Pending | In Progress | Done | Blocked | Skipped/Canceled | Rewritten
   - **Addresses**: `REQ-001`
   - **Blocked by**: None
   - **Execution Waves**:
-    - **Wave 1 (Scaffolding)**: Red interface contracts and failing seam tests (@verifies REQ-001).
-    - **Wave 2 (Implementation)**: Minimal green code (@implements REQ-001).
-    - **Wave 3 (Verification)**: Error handling, edge cases, and contract hardening.
-  - **Verification Seam**: `crate::module::seam_test`
+    - **Wave 1 (Scaffolding)**: Red interface contracts and failing seam tests.
+    - **Wave 2 (Implementation)**: Minimal green code turning seam tests green.
+    - **Wave 3 (Verification)**: Error edge cases and contract hardening.
+  - **Verification Seam**: `crates/module::test_function`
 ```
+*Note: Wave stages (1: Scaffolding, 2: Implementation, 3: Verification, 4: Integration/Human Gate) are flexible and optional per task.*
 
-### Rule 6: Non-Destructive Mutations & Audit Trail
-If a task was canceled or rewritten during evolution:
-- Never delete the original task.
-- Set `- **Status**: Skipped/Canceled` or `- **Status**: Rewritten`.
-- Append mandatory `- **Reason**: <Why>` and `- **Rewrite Target**: <TASK-ID>`.
+### Rule 6: Lowercase Everywhere
+Epic IDs, feature slugs, filenames, and YAML frontmatter identifiers must be strictly lowercase (e.g., `ec-core`, `ft-fast-trace`, `spec-ft-fast-trace`).
 
 ---
 
-## 2. Automated Migration Procedure
+## 2. Migration Execution Sequence
 
 ### Phase 1: Directory Renaming
-1. Rename epic containers: `epics/001-aico-core` $\to$ `epics/EC-core`, `epics/002-aico-specs` $\to$ `epics/EC-specs`.
-2. Inside each epic, rename `specs/` $\to$ `features/`.
-3. Create top-level `<specs-root>/features/` for standalone features.
-4. Rename child feature directories: e.g. `01-host-runtime` $\to$ `core-host-runtime`.
+1. Rename any `epics/001-*` to `epics/ec-<short_id>/`.
+2. Rename `epics/ec-<short_id>/specs/` to `epics/ec-<short_id>/features/`.
+3. Add `ft-` prefix to feature directories: `features/ft-<name>/`.
+4. Rename files: `spec-ft-<name>.md`, `plan-ft-<name>.md`, `brain-ft-<name>.md`.
 
-### Phase 2: File Renaming & Frontmatter Normalization
-1. Rename brainstorm files: e.g. `BRAIN-001-aico-core.md` $\to$ `BRAIN-EC-core.md`.
-2. Rename spec and plan files: e.g. `SPEC-CORE-001.md` $\to$ `SPEC-core-host-runtime.md`, `PLAN-CORE-001.md` $\to$ `PLAN-core-host-runtime.md`.
-3. Inject `order: <number>` and `aico_version: "0.1.2"` into frontmatter.
-4. Set `epic: "EC-{short_id}"` for epic features and `epic: null` for standalone features.
+### Phase 2: Frontmatter Ingestion & Normalization
+1. Insert line-1 YAML frontmatter with `id`, `type`, `aico_version: "0.1.2"`, `epic`, `order`, `title`, `status`, `derives_from`, `created_at`.
+2. Remove redundant metadata blocks from markdown bodies.
 
-### Phase 3: Link Audit & Seam Verification
-1. Audit all relative links across migrated documents.
-2. Confirm all test seams are registered in code with `@verifies` annotations.
+### Phase 3: Path & Relative Link Audit
+1. Normalize absolute or broken links to portable relative links.
+2. Verify all references point to valid paths under the new directory scheme.
+
+### Phase 4: Task Plan Wave Structuring
+1. Transform flat or horizontal phase tasks into vertical tracer-bullet tasks.
+2. Declare flexible internal execution waves for each task.
+
+### Phase 5: Verification & Integrity Check
+Run test suites and confirm frontend loads all epics and features seamlessly.
