@@ -19,10 +19,12 @@
 | **[`aico-deep-dive`](aico-deep-dive/SKILL.md)** | Kùzu graph walk, blast radius & public seam designation | Model/User | `deep-dives/{domain}/DIVE-{seq}-{slug}.md` |
 | **[`aico-spec-creation`](aico-spec-creation/SKILL.md)** | Contract synthesis with 5 EARS patterns & out-of-scope boundaries | Model/User | `specs/{slug}/SPEC-{slug}.md` |
 | **[`aico-planning`](aico-planning/SKILL.md)** | Task graph (DAG) decomposition & active frontier calculation | Model/User | `specs/{slug}/PLAN-{slug}.md` |
+| **[`aico-plan-amendment`](aico-plan-amendment/SKILL.md)** | Non-destructive plan & task mutation across epics | Model/User | Updated `PLAN-*.md` DAG & recomputed frontier |
 | **[`aico-test-scaffolding`](aico-test-scaffolding/SKILL.md)** | Red failing contract tests at public seams with `@verifies` tags | Model/User | Red test suite |
 | **[`aico-implementation`](aico-implementation/SKILL.md)** | Minimal code to pass tests with `@implements` tags | Model/User | Green test suite |
 | **[`aico-diagnosing-bugs`](aico-diagnosing-bugs/SKILL.md)** | Tight-loop defect diagnosis & seam regression locking | Model/User | Passing regression test & clean code |
 | **[`aico-review-loop`](aico-review-loop/SKILL.md)** | Two-axis review (Standards vs Spec) & Kùzu graph convergence | Model/User | Convergence report & Phase N tasks |
+| **[`aico-spec-migration`](aico-spec-migration/SKILL.md)** | Universal frontmatter & relative link migration to v0.1.1 | User-invoked | Migrated SDD specs & ADR repository |
 | **[`aico-codebase-health`](aico-codebase-health/SKILL.md)** | Kùzu graph structural scan for module deepening | User-invoked | Visual HTML before/after report |
 | **[`aico-retro`](aico-retro/SKILL.md)** | Session retrospective & environment evolution | User-invoked | Linter rules, pre-commit hooks, pointers |
 | **[`aico-domain-modeling`](aico-domain-modeling/SKILL.md)** | Ubiquitous domain language & Architecture Decision Records | Model/User | `GLOSSARY.md` & `docs/adr/*.md` |
@@ -40,6 +42,9 @@
                                                                                      │
                                                                                      ▼
 /aico-retro  ◄──  /aico-review-loop  ◄──  /aico-implementation (Red-to-Green)
+      ▲                     ▲
+      │                     │ (Regressions / Broken Seams)
+      └─────────── /aico-plan-amendment / /aico-diagnosing-bugs ◄┘
 ```
 
 1. **Epic Framing (`/aico-epic`)**: Frame overarching capabilities, track simple vs. composite multi-spec topologies.

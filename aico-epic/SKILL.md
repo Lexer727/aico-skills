@@ -84,6 +84,8 @@ An epic reaches completion only when:
 - All human gate tasks in the Plan DAG are satisfied.
 - Frontmatter status for the epic and all child specs/plans is updated to `Completed`.
 
+If runtime defects, broken seams, or regressions are identified in an existing or completed epic, invoke **`/aico-plan-amendment`** to append remediation tasks, re-open plan/epic statuses to `In Progress`, and advance the recalculated frontier without destructive edits.
+
 ---
 
 ## Completion Criteria

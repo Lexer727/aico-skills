@@ -62,6 +62,7 @@ Show the ranked list to the user before testing.
 4. Apply the minimal fix in production code.
 5. Watch the test pass.
 6. Re-run the Phase 1 loop against the original un-minimised scenario.
+7. If the resolution requires formal tracking or multiple remediation tasks, invoke **`/aico-plan-amendment`** to record new tasks in the relevant `PLAN-*.md` and recompute the active frontier.
 
 ---
 

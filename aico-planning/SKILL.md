@@ -24,7 +24,7 @@ Break the work down using tracer-bullet vertical slices:
   - `Done`: Implementation and tests verified green.
   - `Skipped/Canceled`: Explicitly discarded with mandatory `- **Reason**: ...`.
   - `Rewritten`: Replaced by an updated task with mandatory `- **Reason**: ...` and `- **Rewrite Target**: ...`.
-- **Non-Destructive Task Mutations**: Never delete or silently overwrite outdated tasks. Maintain full historical intent and audit trails.
+- **Non-Destructive Task Mutations**: Never delete or silently overwrite outdated tasks. Maintain full historical intent and audit trails. When amending existing plans or remediating defects in ongoing epics, use **`/aico-plan-amendment`**.
 
 ### Wide Refactor Exception: Expand–Contract
 For widespread mechanical changes (renaming types, altering core IPC protocols), do not attempt a single vertical slice:

@@ -44,9 +44,11 @@ The primary path for building new capabilities or applications:
 - **Situation**: Onboarding an existing code repository into AICO without existing specifications.
 - **Skill**: **`/aico-code-to-spec`**. Ingests the codebase AST into Kùzu/LanceDB, extracts domain terms into `GLOSSARY.md`, clusters modules into initiatives, and reverse-engineers formal EARS specifications (`SPEC-*.md`) with test seam designations.
 
-### 4. Defect & Regression On-Ramp
-- **Situation**: A bug, flaky test, or performance regression in existing code.
-- **Skill**: **`/aico-diagnosing-bugs`**. Refuses to theorize without a tight red-capable feedback loop, minimises the reproduction, formulates 3–5 falsifiable hypotheses, instruments with tagged logs, and locks down the fix with a regression test.
+### 4. Defect, Regression & Plan Amendment On-Ramp
+- **Situation**: A bug, flaky test, broken UI seam, or need to append/mutate tasks in existing epics or plans.
+- **Skills**:
+  - **`/aico-diagnosing-bugs`**: Refuses to theorize without a tight red-capable feedback loop, minimises the reproduction, formulates 3–5 falsifiable hypotheses, instruments with tagged logs, and locks down the fix with a regression test.
+  - **`/aico-plan-amendment`**: Appends remediation tasks, rewrites or cancels outdated tasks using the 6-state task model, reopens plan/epic statuses, and recalculates active DAG frontiers without destructive overwrites.
 
 ### 5. Codebase Upkeep & Architecture Health
 - **Situation**: Spare time, code feels brittle, or preparing for a major refactor.
