@@ -208,6 +208,20 @@ function auditArtifact(filePath) {
     if (fm.status && !validStatuses.has(fm.status)) {
       warnings.push(`Non-standard status value: "${fm.status}"`);
     }
+
+    // Check for unquoted frontmatter status string (e.g. status: Completed -> status: "Completed")
+    const fmSlice = content.slice(0, content.indexOf('\n---', 3));
+    const unquotedMatch = fmSlice.match(/\nstatus:\s*([A-Za-z][A-Za-z0-9_\-\s]*)\s*(\r?\n)/);
+    if (unquotedMatch && !unquotedMatch[1].startsWith('"') && !unquotedMatch[1].startsWith("'")) {
+      const rawVal = unquotedMatch[1].trim();
+      if (doFix) {
+        content = content.replace(unquotedMatch[0], `\nstatus: "${rawVal}"${unquotedMatch[2]}`);
+        contentModified = true;
+        report.summary.fixedIssues++;
+      } else {
+        warnings.push(`Frontmatter field "status: ${rawVal}" is unquoted (standardize to double-quoted string: status: "${rawVal}")`);
+      }
+    }
   }
 
   // Rule 3: Single Source of Truth / No Duplicate Body Metadata
