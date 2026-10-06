@@ -136,7 +136,7 @@ Synthesize architectural decisions into formal contract specifications with immu
      - Warning: Weak verbs (`handle`, `support`, `process`), unmeasurable adjectives (`fast`, `scalable`).
      - Mark unresolved points as `[NEEDS CLARIFICATION: <question>]`.
 3. **Scope and Seam Constraints**:
-   - Document explicit Out-of-Scope boundaries.
+   - Document explicit In-Scope and Out-of-Scope boundaries.
    - Document agreed testing seams and public interfaces.
    - Avoid transient file paths or premature code snippets.
 4. **Artifact Generation**:
@@ -145,7 +145,7 @@ Synthesize architectural decisions into formal contract specifications with immu
 #### Completion Criteria
 - [ ] 100% of functional requirements conform to EARS syntax.
 - [ ] Zero unquantified adjectives in acceptance criteria.
-- [ ] Out-of-scope section populated.
+- [ ] In-Scope and Out-of-Scope sections populated.
 
 ---
 

@@ -1,11 +1,12 @@
 ---
-id: SPEC-{domain}-{seq}
+id: spec-ft-{feature_slug}
 type: spec
-aico_version: "0.1.1"
-epic: "{epic-slug}"
+aico_version: "0.1.2"
+epic: "ec-{short_id}" # or null if standalone feature
+order: 1
 title: "{Title}"
 status: Draft
-derives_from: ["BRAIN-...", "ADR-..."]
+derives_from: ["brain-...", "adr-..."]
 created_at: "{YYYY-MM-DDTHH:MM:SSZ}"
 ---
 
@@ -14,12 +15,20 @@ created_at: "{YYYY-MM-DDTHH:MM:SSZ}"
 ## 1. Problem Statement & User Value
 Describe the user problem and the measurable value delivered by this feature from the user perspective.
 
-## 2. User Stories
+## 2. In-Scope
+- {Explicitly included capability 1}
+- {Explicitly included capability 2}
+
+## 3. Out-of-Scope
+- {Explicitly excluded item 1}
+- {Explicitly excluded item 2}
+
+## 4. User Stories
 1. **US-01** (Priority: P1): As an `<actor>`, I want `<capability>`, so that `<benefit>`.
    - *Independent Test*: How this story can be verified independently as an MVP slice.
 2. **US-02** (Priority: P2): ...
 
-## 3. Functional Requirements (EARS)
+## 5. Functional Requirements (EARS)
 
 ### Ubiquitous
 - **REQ-001**: The `<system>` shall `<response>`.
@@ -36,13 +45,9 @@ Describe the user problem and the measurable value delivered by this feature fro
 ### Optional Features
 - **REQ-005**: Where `<feature flag>`, the `<system>` shall `<response>`.
 
-## 4. Designated Public Test Seams
+## 6. Designated Public Test Seams
 - **Primary Seam**: The public module interface where tests will observe behavior.
 - **Verification Strategy**: Contract and behavioral integration testing without reaching into internals.
 
-## 5. Out of Scope
-- {Explicitly excluded item 1}
-- {Explicitly excluded item 2}
-
-## 6. Open Clarifications
+## 7. Open Clarifications
 - {List of any [NEEDS CLARIFICATION] items, or "None."}

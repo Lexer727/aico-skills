@@ -30,7 +30,7 @@ The primary path for building new capabilities or applications:
 1. **`/aico-epic`**: Scaffolds the epic container in `<project>-specs/epics/`, frames the capability, and runs **`/aico-brainstorm`** for overarching concept and trade-offs. Decides simple flat spec vs. composite multi-spec decomposition.
    - *Detour*: If a question needs a runnable visual or state model before writing specs, branch into **`/aico-prototype`** on a throwaway branch.
 2. **`/aico-deep-dive`**: Performs blast-radius analysis and dependency graph traversal in Kùzu to designate public test seams before specifying.
-3. **`/aico-spec-creation`**: Synthesizes formal EARS requirements (`REQ-###`) using the 5 canonical patterns. Records explicit out-of-scope boundaries and designated public test seams.
+3. **`/aico-spec-creation`**: Synthesizes formal EARS requirements (`REQ-###`) using the 5 canonical patterns. Records explicit In-Scope and Out-of-Scope boundaries and designated public test seams.
 4. **`/aico-planning`**: Decomposes the specification into a Directed Acyclic Graph (DAG) of vertical tracer bullets with explicit `blocked_by` dependencies and human gate tasks.
 5. **`/aico-test-scaffolding`**: Scaffolds red (failing) tests at public seams tagged with `// @verifies SPEC-ID::REQ-ID`.
 6. **`/aico-implementation`**: Writes minimal code to make tests green, tagging source symbols with `// @implements SPEC-ID::REQ-ID`.

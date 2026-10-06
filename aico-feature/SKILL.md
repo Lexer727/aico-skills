@@ -94,6 +94,7 @@ Invoke **`/aico-spec-creation`**:
   ---
   ```
 - Formulate testable EARS requirements (`REQ-001..`) conforming strictly to canonical grammar patterns.
+- Populate explicit `## In-Scope` and `## Out-of-Scope` boundaries.
 - Designate public test seams in code.
 
 ### Step 4: Decompose into Task Plan DAG

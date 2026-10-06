@@ -114,7 +114,7 @@ In accordance with `./aico/idea.md`, AICO requires **7 Core SDD Skills**, enrich
      - *Unwanted Behavior*: `If <condition>, then the <system> shall <response>.`
      - *Optional Feature*: `Where <feature>, the <system> shall <response>.`
   2. Runs internal EARS linting (no weak verbs, no unmeasurable adjectives, single modal `shall`).
-  3. Explicitly declares **Out of Scope** boundaries and **Agreed Test Seams**.
+  3. Explicitly declares **In-Scope** and **Out-of-Scope** boundaries and **Agreed Test Seams**.
   4. Invokes MCP gate `create_sdd_artifact(artifact_type='spec', derives_from_ids=['BRAIN-...', 'DIVE-...'])`.
 * **Output**: `specs/{domain}/SPEC-{seq}-{slug}.md`.
 

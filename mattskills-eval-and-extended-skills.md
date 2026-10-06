@@ -109,7 +109,7 @@ By integrating the highest-leverage skills from `mattskills`, AICO's harness exp
 
 ### 4.5 `aico-wayfinder` (High-Fog Greenfield Chartering)
 * **Trigger**: Major architectural initiatives that cannot fit in a single session or spec (e.g. building AICO's own desktop storage layer).
-* **Function**: Establishes a shared map of decision tickets. Distinguishes between what can be specified now, the "fog of war" (not yet specified), and what is out of scope. Resolves decisions one by one, then hands off to `aico-spec-creation`.
+* **Function**: Establishes a shared map of decision tickets. Distinguishes between what can be specified now, the "fog of war" (not yet specified), and what is out-of-scope. Resolves decisions one by one, then hands off to `aico-spec-creation`.
 
 ### 4.6 `aico-codebase-health` (Graph-Assisted Deepening & Refactoring)
 * **Trigger**: Upkeep sessions or when modules become brittle.

@@ -57,7 +57,7 @@ When an effort is too large or ambiguous for a single session, do not charge int
    ## Not Yet Specified (The Fog of War)
    <!-- In-scope topics not yet sharp enough to ticket -->
    
-   ## Out of Scope
+   ## Out-of-Scope
    <!-- Work explicitly ruled outside the destination -->
    ```
 

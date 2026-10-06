@@ -70,10 +70,15 @@ Add at least one `Unwanted Behavior` pattern for:
 - Boundary condition limits (file sizes, memory limits, timeouts).
 - Authentication or authorization failures.
 
+### Step 5: Declare Explicit Scope Boundaries
+- Document `## In-Scope`: Explicit list of included capabilities and architectural features.
+- Document `## Out-of-Scope`: Explicit list of excluded items, non-goals, and deferred features (always hyphenated: `## Out-of-Scope`).
+
 ---
 
 ## Completion Criteria
 - [ ] Frontmatter includes canonical `spec-ft-<slug>` ID, `epic`, `order`, and `status`.
+- [ ] Explicit `## In-Scope` and `## Out-of-Scope` sections populated.
 - [ ] Every requirement follows strict EARS grammar with a single "shall".
 - [ ] Negative paths and edge cases addressed.
 - [ ] Public test seams designated.
