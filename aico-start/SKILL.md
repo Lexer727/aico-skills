@@ -23,7 +23,7 @@ disable-model-invocation: false
                             └────────┬───────┘
                                      │
                      Is it composite, multi-subsystem,
-                     or requires multi-milestone waves?
+                     or requires multi-milestone decomposition?
                                      │
                     ┌────────────────┴────────────────┐
                     │                                 │

@@ -1,6 +1,6 @@
 ---
 name: aico-feature
-description: "Universal atomic engine for feature scaffolding, specification, and execution (both standalone features and child features inside epics). Enforces ft- naming, optional epic container binding, EARS specifications, and vertical tracer-bullet task DAG planning with flexible internal execution waves."
+description: "Universal atomic engine for feature scaffolding, specification, and execution (both standalone features and child features inside epics). Enforces ft- naming, optional epic container binding, EARS specifications, and vertical tracer-bullet task DAG planning."
 disable-model-invocation: false
 ---
 
@@ -33,12 +33,7 @@ disable-model-invocation: false
    - `status`: `Draft` | `Pending` | `In Progress` | `Completed`
    - `derives_from`: List of derived ADR IDs, Brainstorm IDs, or parent Epic IDs
    - `created_at`: ISO 8601 UTC timestamp
-5. **Vertical Tracer-Bullet Tasks with Flexible Internal Waves**: Implementation tasks within `plan-ft-<feature_slug>.md` represent vertical slices. Inside each task, execution is broken down into flexible execution waves chosen from:
-   - **Wave 1 (Scaffolding)**: Red interface contracts and failing seam tests (`@verifies REQ-###`).
-   - **Wave 2 (Implementation)**: Minimal green code turning seam tests green (`@implements REQ-###`).
-   - **Wave 3 (Verification)**: Error edge cases, security invariants, benchmarks, and contract hardening.
-   - **Wave 4 (Integration / Human Gate)**: End-to-end integration, UI wiring, and user verification.
-   *Note: Waves are optional per task; a task only declares the waves it actually requires.*
+5. **Vertical Tracer-Bullet Tasks**: Implementation tasks within `plan-ft-<feature_slug>.md` represent narrow vertical slices with explicit `REQ-###` mapping, clear deliverables, `blocked_by` dependencies, and designated public test seams.
 
 ---
 
@@ -63,12 +58,12 @@ When invoked, `aico-feature` accepts:
        │
        ├── 3. /aico-spec-creation (Draft spec-ft-<slug>.md with EARS requirements)
        │
-       ├── 4. /aico-planning (Draft plan-ft-<slug>.md with vertical tasks & flexible waves)
+       ├── 4. /aico-planning (Draft plan-ft-<slug>.md with vertical tasks in DAG)
        │
        └── 5. Delivery Execution:
-              - /aico-test-scaffolding (Wave 1: Red tests @verifies)
-              - /aico-implementation    (Wave 2: Green domain code @implements)
-              - Hardening & Review     (Wave 3 & Wave 4)
+              - /aico-test-scaffolding (Failing red contract tests @verifies)
+              - /aico-implementation    (Minimal green domain code @implements)
+              - /aico-review-loop       (Two-axis verification & review gate)
 ```
 
 ### Step 1: Scaffold Feature Container
@@ -117,13 +112,12 @@ Invoke **`/aico-planning`**:
   created_at: "YYYY-MM-DDTHH:MM:SSZ"
   ---
   ```
-- Structure tasks into vertical tracer bullets with flexible internal execution waves (Wave 1, 2, 3, and/or 4).
+- Structure tasks into vertical tracer bullets with explicit `blocked_by` dependencies.
 
 ### Step 5: Test Scaffolding & Implementation
-1. Invoke **`/aico-test-scaffolding`** to write failing contract tests (`Wave 1`).
-2. Invoke **`/aico-implementation`** to write green code (`Wave 2`).
-3. Complete verification/hardening (`Wave 3`) and human gates (`Wave 4`) if declared.
-4. Run `/aico-review-loop` and update frontmatter status to `Completed`.
+1. Invoke **`/aico-test-scaffolding`** to write failing contract tests (`@verifies`).
+2. Invoke **`/aico-implementation`** to write green code (`@implements`).
+3. Run `/aico-review-loop` and update frontmatter status to `Completed`.
 
 ---
 
@@ -131,5 +125,5 @@ Invoke **`/aico-planning`**:
 - [ ] Feature directory created with `ft-` prefix (`features/ft-<slug>/` or `epics/ec-<id>/features/ft-<slug>/`).
 - [ ] Deep dive blast radius analyzed and seams designated.
 - [ ] `spec-ft-<slug>.md` drafted with canonical frontmatter (`epic: "ec-<id>"` or `null`).
-- [ ] `plan-ft-<slug>.md` drafted with vertical tasks declaring flexible internal execution waves.
+- [ ] `plan-ft-<slug>.md` drafted with vertical tracer-bullet tasks and explicit DAG dependencies.
 - [ ] Visible in the AICO WebUI (Epic Hub or Standalone Feature Hub).

@@ -62,7 +62,7 @@ From /aico-start ───> /aico-epic ───> Scaffold Container ───> 
    - `epic`: `"ec-{short_id}"`
    - `target_dir`: `epics/ec-{short_id}/features/ft-{short_id}-{feature_n}/`
    - `derives_from`: `["brain-ec-{short_id}"]`
-3. `/aico-feature` runs the deep-dive, drafts `spec-ft-*.md`, and constructs `plan-ft-*.md` with vertical tracer-bullet tasks and flexible internal waves.
+3. `/aico-feature` runs the deep-dive, drafts `spec-ft-*.md`, and constructs `plan-ft-*.md` with vertical tracer-bullet tasks in a DAG.
 
 ### Step 4: Register in Kùzu Property Graph
 Register the epic and its relationships:
@@ -78,7 +78,7 @@ MERGE (s)-[:DERIVED_FROM]->(b)
 
 ### Step 5: Cross-Feature Milestone Convergence
 An epic reaches completion only when:
-- All child features have passing red-to-green seam tests across all declared internal waves.
+- All child features have passing red-to-green seam tests across their task plans.
 - Standards vs Spec two-axis review has passed (`/aico-review-loop`).
 - All human gate tasks in the Plan DAG are satisfied.
 - Frontmatter status for the epic brainstorm and all child specs/plans is updated to `Completed`.
@@ -91,5 +91,5 @@ An epic reaches completion only when:
 - [ ] Child feature directories created under `features/` with `ft-` prefix.
 - [ ] Child features created via `/aico-feature` calls.
 - [ ] All child specs and plans declare `order: <number>`, `aico_version: "0.1.2"`, and `epic: "ec-{short_id}"`.
-- [ ] Tasks declare flexible internal execution waves.
+- [ ] Child feature tasks organized in a vertical tracer-bullet DAG with explicit dependencies.
 - [ ] Epic visible in the AICO WebUI Epic Hub.

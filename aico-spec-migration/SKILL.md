@@ -1,6 +1,6 @@
 ---
 name: aico-spec-migration
-description: "Audit, normalize, and upgrade existing AICO Spec-Driven Development (SDD) repositories to target version 0.1.2. Enforces ec- epic naming, ft- feature naming, frontmatter order attributes, relative links, and flexible wave-internal task execution."
+description: "Audit, normalize, and upgrade existing AICO Spec-Driven Development (SDD) repositories to target version 0.1.2. Enforces ec- epic naming, ft- feature naming, frontmatter order attributes, relative links, and vertical tracer-bullet DAG task execution."
 disable-model-invocation: false
 ---
 
@@ -52,20 +52,18 @@ All markdown links pointing to internal artifacts, specs, plans, code files, or 
 ### Rule 4: Single Source of Truth (Zero Duplicated Body Metadata)
 Never repeat fields defined in the frontmatter (`ID`, `Status`, `Derives From`, `Title`) under the top `# Title` heading.
 
-### Rule 5: Vertical Tasks with Flexible Wave-Internal Execution
-Implementation plan tasks replace simple checkboxes with explicit status fields and define flexible internal execution waves:
+### Rule 5: Vertical Tracer-Bullet Tasks in DAG
+Implementation plan tasks replace simple checkboxes with explicit status fields, deliverables, test seams, and DAG dependencies:
 ```markdown
 - **TASK-{prefix}-{suffix}-{seq}**: {Title}
   - **Status**: Done # Pending | In Progress | Done | Blocked | Skipped/Canceled | Rewritten
   - **Addresses**: `REQ-001`
   - **Blocked by**: None
-  - **Execution Waves**:
-    - **Wave 1 (Scaffolding)**: Red interface contracts and failing seam tests.
-    - **Wave 2 (Implementation)**: Minimal green code turning seam tests green.
-    - **Wave 3 (Verification)**: Error edge cases and contract hardening.
+  - **What it delivers**:
+    - Deliverable item 1
+    - Deliverable item 2
   - **Verification Seam**: `crates/module::test_function`
 ```
-*Note: Wave stages (1: Scaffolding, 2: Implementation, 3: Verification, 4: Integration/Human Gate) are flexible and optional per task.*
 
 ### Rule 6: Lowercase Everywhere
 Epic IDs, feature slugs, filenames, and YAML frontmatter identifiers must be strictly lowercase (e.g., `ec-core`, `ft-fast-trace`, `spec-ft-fast-trace`).
@@ -88,9 +86,9 @@ Epic IDs, feature slugs, filenames, and YAML frontmatter identifiers must be str
 1. Normalize absolute or broken links to portable relative links.
 2. Verify all references point to valid paths under the new directory scheme.
 
-### Phase 4: Task Plan Wave Structuring
+### Phase 4: Task Plan DAG Structuring
 1. Transform flat or horizontal phase tasks into vertical tracer-bullet tasks.
-2. Declare flexible internal execution waves for each task.
+2. Establish explicit dependency graph (`blocked_by`).
 
 ### Phase 5: Verification & Integrity Check
 Run test suites and confirm frontend loads all epics and features seamlessly.
