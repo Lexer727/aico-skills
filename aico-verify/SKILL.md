@@ -57,10 +57,10 @@ Every artifact in the specs repository (`epics/`, `features/`, `adr/`, `specs/`,
    - Mandatory fields:
      ```yaml
      ---
-     id: <artifact-id>        # Lowercase canonical ID (e.g., spec-ft-fast-trace, plan-ft-fast-trace, ec-core)
-     type: <type>             # spec | plan | brainstorm | deep_dive | adr
-     aico_version: "0.1.2"    # Strictly "0.1.2" (never "0.1.0" or "0.1.1")
-     epic: <"ec-<id>" | null> # Enclosing epic container or null
+     id: <artifact-id>               # Lowercase canonical ID (e.g., spec-ft-fast-trace, plan-ft-fast-trace, ec-core)
+     type: <type>                    # spec | plan | brainstorm | deep_dive | adr
+     aico_skills_version: "0.1.2"    # Governed by aico-skills/VERSION (legacy aico_version accepted)
+     epic: <"ec-<id>" | null>        # Enclosing epic container or null
      order: <integer>         # Non-negative sequence integer (required for specs, plans, features)
      title: "<Document Title>"
      status: <Status>         # Draft | Pending | In Progress | Completed (or Accepted/Proposed for ADR)
@@ -142,7 +142,7 @@ node <skills-path>/aico-verify/scripts/verify-artifacts.mjs <specs-dir> [codebas
 
 ### Options:
 - `--verbose`: Displays detailed unverified requirement IDs and trace mappings.
-- `--fix`: Automatically repairs safe blueprint issues (e.g. upgrading `aico_version: "0.1.1"` to `"0.1.2"`, resolving relative ADR linking depths).
+- `--fix`: Automatically repairs safe blueprint issues (e.g. normalizing `aico_version` to `aico_skills_version: "0.1.2"`, resolving relative ADR linking depths).
 - `--json`: Emits complete machine-readable verification JSON for CI/CD or agent ingestion.
 
 ### Example Invocations:

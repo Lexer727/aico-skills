@@ -1,11 +1,12 @@
 ---
-id: PLAN-{domain}-{seq}
+id: plan-ft-{feature_slug}
 type: plan
-aico_version: "0.1.1"
-epic: "{epic-slug}"
-title: "{Title}"
+aico_skills_version: "0.1.2"
+epic: "ec-{short_id}" # or null if standalone feature
+order: 1
+title: "{Title} Implementation Plan"
 status: Pending
-derives_from: ["SPEC-{domain}-{seq}"]
+derives_from: ["spec-ft-{feature_slug}"]
 created_at: "{YYYY-MM-DDTHH:MM:SSZ}"
 ---
 

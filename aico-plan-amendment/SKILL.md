@@ -28,7 +28,7 @@ Manage, append, and mutate tasks within existing implementation plans (`PLAN-*.m
    - If a plan was marked `Completed` (or `Pending`) and new remediation tasks are added, transition the plan's line-1 YAML frontmatter `status` to `In Progress`.
    - If the parent Epic was marked `Completed`, transition its frontmatter `status` to `In Progress` until all amended tasks pass verification.
 4. **Universal Blueprint Compliance**:
-   - Preserve line-1 YAML frontmatter (`id`, `type: plan`, `aico_version: "0.1.1"`, `title`, `status`, `derives_from`, `created_at`).
+   - Preserve line-1 YAML frontmatter (`id`, `type: plan`, `aico_skills_version: "0.1.2"`, `title`, `status`, `derives_from`, `created_at`).
    - All links must remain strict relative paths (`../../adr/...`), never absolute `file:///` URLs.
 
 ---
@@ -109,7 +109,7 @@ When a pending task is no longer necessary:
   ---
   id: plan-ft-core-webui-shell
   type: plan
-  aico_version: "0.1.2"
+  aico_skills_version: "0.1.2"
   epic: "ec-core"
   title: "WebUI Application Shell, Navigation & Dockable Layout"
   status: "In Progress"

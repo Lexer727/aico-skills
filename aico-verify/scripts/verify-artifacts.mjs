@@ -28,6 +28,26 @@ if (codeDir) {
   codeDir = path.resolve(codeDir);
 }
 
+// Discover skills harness version from VERSION file in skills repo root
+function getSkillsHarnessVersion() {
+  const possiblePaths = [
+    path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), '../../VERSION'),
+    path.resolve(process.env.USERPROFILE || '', '.gemini/config/plugins/aico-skills/skills/VERSION'),
+    'd:/aico/codebase/aico-skills/VERSION',
+  ];
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      try {
+        const v = fs.readFileSync(p, 'utf8').trim();
+        if (v) return v;
+      } catch {}
+    }
+  }
+  return '0.1.2'; // default fallback
+}
+
+const expectedSkillsVersion = getSkillsHarnessVersion();
+
 // Data structures for verification report
 const report = {
   timestamp: new Date().toISOString(),
@@ -180,14 +200,32 @@ function auditArtifact(filePath) {
     if (!fm.title) errors.push('Missing required frontmatter field: "title"');
     if (!fm.status) errors.push('Missing required frontmatter field: "status"');
 
-    if (fm.aico_version !== '0.1.2') {
-      if (doFix && (fm.aico_version === '0.1.1' || fm.aico_version === '0.1.0')) {
-        content = content.replace(/aico_version:\s*["']?[0-9\.]+["']?/, 'aico_version: "0.1.2"');
+    const artifactSkillsVersion = fm.aico_skills_version || fm.aico_version;
+    if (!artifactSkillsVersion) {
+      if (doFix) {
+        content = content.replace(/\ntype:\s*([^\n\r]+)/, `\ntype: $1\naico_skills_version: "${expectedSkillsVersion}"`);
         contentModified = true;
         report.summary.fixedIssues++;
-        fm.aico_version = '0.1.2';
+        fm.aico_skills_version = expectedSkillsVersion;
       } else {
-        errors.push(`Invalid "aico_version": expected "0.1.2", found "${fm.aico_version || 'undefined'}"`);
+        errors.push(`Missing required frontmatter field: "aico_skills_version" (expected "${expectedSkillsVersion}")`);
+      }
+    } else if (artifactSkillsVersion !== expectedSkillsVersion) {
+      if (doFix) {
+        content = content.replace(/(?:aico_skills_version|aico_version):\s*["']?[0-9\.]+["']?/, `aico_skills_version: "${expectedSkillsVersion}"`);
+        contentModified = true;
+        report.summary.fixedIssues++;
+        fm.aico_skills_version = expectedSkillsVersion;
+      } else {
+        errors.push(`Invalid skills version: expected "${expectedSkillsVersion}", found "${artifactSkillsVersion}"`);
+      }
+    } else if (fm.aico_version && !fm.aico_skills_version) {
+      // Normalize legacy field name to canonical aico_skills_version
+      if (doFix) {
+        content = content.replace(/\baico_version:/, 'aico_skills_version:');
+        contentModified = true;
+        report.summary.fixedIssues++;
+        fm.aico_skills_version = fm.aico_version;
       }
     }
 
@@ -551,6 +589,7 @@ function printHumanReport() {
   if (codeDir) {
     console.log(`${c.dim}Codebase Root: ${codeDir}${c.reset}`);
   }
+  console.log(`${c.dim}Skills Version: v${expectedSkillsVersion}${c.reset}`);
   console.log(`${c.dim}Timestamp    : ${report.timestamp}${c.reset}\n`);
 
   // SECTION 1: Summary Table

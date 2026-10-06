@@ -1,7 +1,7 @@
 ---
 id: spec-ft-{feature_slug}
 type: spec
-aico_version: "0.1.2"
+aico_skills_version: "0.1.2"
 epic: "ec-{short_id}" # or null if standalone feature
 order: 1
 title: "{Title}"

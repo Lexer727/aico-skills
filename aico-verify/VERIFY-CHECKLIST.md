@@ -15,8 +15,8 @@ A quick-reference checklist for auditing SDD artifacts and codebase ground-truth
   - Brainstorm: `brain-ec-<slug>` or `brain-ft-<slug>`
   - Deep Dive: `dive-ft-<slug>`
   - ADR: `adr-<####>`
-- [ ] **Mandatory Fields**: `id`, `type`, `aico_version`, `title`, `status`, `created_at`.
-- [ ] **Version**: `aico_version: "0.1.2"` strictly.
+- [ ] **Mandatory Fields**: `id`, `type`, `aico_skills_version` (governed by `aico-skills/VERSION`), `title`, `status`, `created_at`.
+- [ ] **Version**: `aico_skills_version: "0.1.2"` strictly (matching `aico-skills/VERSION`).
 - [ ] **Order Attribute**: `order: <integer>` present on all specs, plans, and features.
 - [ ] **Valid Status**: One of `Draft`, `Pending`, `In Progress`, `Completed` (or `Accepted`, `Proposed`, `Rejected`, `Superseded` for ADRs).
 
