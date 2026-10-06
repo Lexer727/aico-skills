@@ -1,12 +1,12 @@
 ---
 name: aico-spec-creation
-description: "Draft unambiguous, testable feature specifications using strict EARS syntax patterns, immutable requirement IDs, universal YAML frontmatter, relative linking, and explicit out-of-scope boundaries."
+description: "Draft unambiguous, testable feature specifications using strict EARS syntax patterns, immutable requirement IDs, universal YAML frontmatter with decoupled ordering, and explicit out-of-scope boundaries."
 disable-model-invocation: false
 ---
 
 # AICO Spec Creation: Contract Synthesis & EARS Grammar
 
-Transform brainstorms and deep-dives into an immutable, verifiable contract specification (`SPEC-{domain}-{slug}.md`).
+Transform brainstorms and deep-dives into an immutable, verifiable contract specification (`SPEC-{prefix}-{slug}.md`).
 
 ---
 
@@ -28,7 +28,16 @@ Every functional requirement **must strictly conform** to one of the 5 canonical
 
 ## 2. Blueprint & Schema Rules
 
-1. **Mandatory Line-1 YAML Frontmatter**: Must include `id`, `type: spec`, `aico_version: "0.1.1"`, `epic`, `title`, `status`, `derives_from`, and `created_at`.
+1. **Mandatory Line-1 YAML Frontmatter**: Must include:
+   - `id`: `SPEC-{prefix}-{feature_suffix}` (or `SPEC-{feature_slug}` for standalone).
+   - `type: spec`
+   - `aico_version: "0.1.2"`
+   - `epic`: `"EC-{short_id}"` (or `null` if standalone).
+   - `order`: `<integer>` (governs visual sort sequence without altering directory names).
+   - `title`: Human-readable capability title.
+   - `status`: `Draft` | `Pending` | `In Progress` | `Completed`.
+   - `derives_from`: List of derived ADR IDs or Brainstorm IDs.
+   - `created_at`: ISO 8601 UTC timestamp.
 2. **Lifecycle Status Progression**:
    - `Draft`: During authoring and refinement.
    - `Pending`: Approved and queued for planning/implementation.
@@ -42,12 +51,12 @@ Every functional requirement **must strictly conform** to one of the 5 canonical
 ## 3. Process
 
 ### Step 1: Ingest Context
-Load the parent brainstorm (`BRAIN-*.md`), deep-dive (`DIVE-*.md`), and `GLOSSARY.md`. Verify that all domain terms match the canonical glossary.
+Load the parent brainstorm (`BRAIN-EC-*.md` or single-feature brainstorm), deep-dive (`DIVE-*.md`), and `GLOSSARY.md`. Verify that all domain terms match the canonical glossary.
 
 ### Step 2: Formulate EARS Requirements
 - Translate each user story into atomic, testable requirements assigned sequential, stable identifiers (`REQ-001`, `REQ-002`, ...).
 - **Split compound requirements**: If a statement contains "and" or multiple responses, split it into separate `REQ-###` items.
-- Ensure every `<system>` is explicitly named (e.g. `The StorageWatcher shall...`, never passive `Files are watched`).
+- Ensure every `<system>` is explicitly named (e.g. `The HostDaemon shall...`, never passive `Files are watched`).
 - If an aspect is genuinely unknown, append `[NEEDS CLARIFICATION: <question>]`.
 
 ### Step 3: Enforce Quality & Ambiguity Linting
@@ -58,30 +67,4 @@ Audit your draft against the ambiguity checklist:
 
 ### Step 4: Define Scope & Test Seams
 - Populate the **Out of Scope** section with everything explicitly rejected during brainstorming.
-- Explicitly document the designated **Public Test Seams** identified during `/aico-deep-dive`.
-- **Do not include ephemeral code snippets or file paths in the spec** (they rot quickly).
-
-### Step 5: Commit Artifact via MCP Gate
-Commit the artifact using `create_sdd_artifact`:
-```yaml
-mcp_call:
-  tool_name: "create_sdd_artifact"
-  parameters:
-    artifact_type: "spec"
-    domain: "<domain>"
-    slug: "<slug>"
-    derives_from_ids: ["BRAIN-...", "DIVE-..."]
-    title: "<Feature Title>"
-    content_body: <Formatted using SPEC-TEMPLATE.md>
-```
-
----
-
-## Completion Criteria
-- [ ] Mandatory YAML frontmatter at line 1 (`aico_version: "0.1.1"`).
-- [ ] Zero duplicate metadata attributes in the markdown body.
-- [ ] 100% of functional requirements conform to EARS grammar with stable IDs (`REQ-###`).
-- [ ] All cross-document links use portable relative paths.
-- [ ] Out of Scope section populated with explicit boundaries.
-- [ ] Designated test seams documented.
-- [ ] Artifact committed with provenance references to brainstorm and deep-dive.
+- Designate primary and secondary code test seams (`crate::module::seam_function`).

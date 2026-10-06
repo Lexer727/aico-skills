@@ -1,97 +1,96 @@
 ---
 name: aico-epic
-description: "Scaffold, frame, and orchestrate a new engineering epic. Coordinates shared brainstorming, decides simple vs composite multi-spec decomposition, and tracks cross-spec milestone convergence with universal YAML frontmatter and relative linking."
+description: "Scaffold, frame, and orchestrate a multi-feature engineering epic. Coordinates shared brainstorming, child feature decomposition under features/, tracks cross-feature milestone convergence, and enforces EC- naming with YAML frontmatter ordering."
 disable-model-invocation: false
 ---
 
-# AICO Epic: Capability Framing & Multi-Spec Orchestration
+# AICO Epic: Multi-Feature Capability Framing & Orchestration
 
-An **Epic** is the top-level unit of intent and execution under a Project. It bundles a cohesive idea from conception to verified code, serving as the parent container for all associated SDD artifacts (shared brainstorms, deep dives, specifications, and task plans).
+An **Epic** is the strategic container for large initiatives that decompose into multiple child features and milestones. It is identified by the canonical prefix `EC-{short_id}` (e.g. `EC-core`, `EC-specs`), bundling an overarching brainstorm (`BRAIN-EC-{short_id}.md`) and child feature specifications under `features/`.
 
-Use `/aico-epic` when starting a new capability, epic, or feature set.
+> **Note**: For self-contained, single-capability additions or utilities, use **`/aico-feature`** directly. Use **`/aico-start`** as the universal front door to triage between an Epic and a Standalone Feature.
 
 ---
 
 ## 1. Blueprint & Artifact Rules
 
-1. **Universal Line-1 YAML Frontmatter**: Every artifact (`BRAIN-*.md`, `SPEC-*.md`, `PLAN-*.md`) must include canonical frontmatter with `id`, `type`, `aico_version: "0.1.1"`, `title`, `status`, `derives_from`, and `created_at`.
-2. **Single Source of Truth**: Never duplicate frontmatter metadata attributes in the markdown body.
-3. **Strict Relative Linking**: All internal links across documents must be relative markdown paths (`../../adr/...`), never absolute `file:///` URLs.
-4. **4-State Lifecycle**: `Draft` $\to$ `Pending` $\to$ `In Progress` $\to$ `Completed`.
-5. **6-State Task Tracking**: In plans, tasks use explicit `Status: Pending | In Progress | Done | Blocked | Skipped/Canceled | Rewritten`. Any canceled or rewritten tasks must include `Reason` and `Rewrite Target`.
+1. **Epic Container Naming**: Always use `epics/EC-{short_id}/` (e.g. `epics/EC-core/`, `epics/EC-specs/`). Never prefix with sequence numbers like `001-`.
+2. **Child Features Directory**: Child features are stored under `epics/EC-{short_id}/features/{short_id}-{feature_suffix}/` (e.g. `features/core-host-runtime/`).
+3. **Decoupled Ordering**: Visual and execution sequence is declared via `order: <number>` in YAML frontmatter, never by prefixing directory or filenames with `01-`, `02-`.
+4. **Universal Line-1 YAML Frontmatter**: Every artifact (`BRAIN-EC-*.md`, `SPEC-*.md`, `PLAN-*.md`) must include canonical frontmatter with `id`, `type`, `aico_version: "0.1.2"`, `epic: "EC-{short_id}"`, `order: <number>`, `title`, `status`, `derives_from`, and `created_at`.
+5. **Wave-Internal Task Execution**: Implementation tasks within child feature plans declare internal execution waves:
+   - **Wave 1 (Scaffolding)**: Red interface contracts and failing seam tests (`@verifies REQ-###`).
+   - **Wave 2 (Implementation)**: Minimal green code turning seam tests green (`@implements REQ-###`).
+   - **Wave 3 (Verification)**: Error edge cases, security invariants, and contract hardening.
+   - **Wave 4 (Integration / Human Gate)**: End-to-end integration and user verification.
+6. **Strict Relative Linking**: All cross-document links must use portable relative markdown paths (e.g. `../../adr/...`), never absolute `file:///` URLs.
 
 ---
 
 ## 2. Process
 
 ```
-New Idea ───> /aico-epic ───> Scaffold Container ───> /aico-brainstorm ───> Simple or Composite?
-                              (<slug>/)              (Shared Brainstorm)    │
-                                                                           ├──> Simple: 1 Spec directly
-                                                                           └──> Composite: Decompose into child specs
+From /aico-start ───> /aico-epic ───> Scaffold Container ───> Draft BRAIN-EC-<id>.md ───> Decompose Features
+                     (Triage Match)     (epics/EC-<id>/)      (Overarching Concept)        (under features/)
 ```
 
-### Step 1: Scope & Scaffold the Epic
-1. Verify the active project (resolves `<aico-root>/<project>-specs/`).
-2. Assign a sequential slug: `epics/<seq>-<epic-slug>/` (e.g. `001-aico-core`, `002-aico-specs`).
-3. Create the epic container directory:
-   `<project>-specs/epics/<seq>-<slug>/`
+### Step 1: Scope & Scaffold the Epic Container
+1. Resolve `<project>-specs/epics/EC-{short_id}/` using a concise, descriptive identifier (e.g. `EC-core`, `EC-specs`, `EC-workspace`).
+2. Create the container directory and its child `features/` directory:
+   - `<project>-specs/epics/EC-{short_id}/`
+   - `<project>-specs/epics/EC-{short_id}/features/`
 
 ### Step 2: Overarching Concept & Shared Brainstorm
-1. Invoke **`/aico-brainstorm`** targeting the whole epic.
-2. Socratic grilling identifies:
-   - Problem statement & measurable user value.
-   - Cross-cutting architectural trade-offs (e.g. communication protocol, shared data schemas).
-   - Candidate approaches & rejected alternatives.
-3. Write the shared brainstorm artifact with frontmatter:
-   `<project>-specs/epics/<seq>-<slug>/BRAIN-<slug>.md`
+1. Ingest problem statement, cross-cutting architectural trade-offs, and candidate alternatives gathered in `/aico-start`.
+2. Write the shared brainstorm artifact with frontmatter:
+   `<project>-specs/epics/EC-{short_id}/BRAIN-EC-{short_id}.md`
+   ```yaml
+   ---
+   id: BRAIN-EC-{short_id}
+   type: brainstorm
+   aico_version: "0.1.2"
+   epic: "EC-{short_id}"
+   title: "Epic Title"
+   status: In Progress
+   derives_from: ["ADR-####"]
+   created_at: "YYYY-MM-DDTHH:MM:SSZ"
+   ---
+   ```
 
-### Step 3: Determine Epic Structure (Simple vs. Composite)
-Ask the developer:
-> *"Does this epic implement as a single cohesive unit, or does it decompose into distinct child specifications (e.g. Backend API vs. Frontend WebUI)?"*
-
-- **Path A: Simple Epic (Single Spec)**:
-  - Keep a flat structure inside `epics/<seq>-<slug>/`:
-    - `BRAIN-<slug>.md`
-    - `DEEP-<slug>.md` (blast radius analysis via `/aico-deep-dive`)
-    - `SPEC-<slug>.md` (EARS requirements via `/aico-spec-creation`)
-    - `PLAN-<slug>.md` (task DAG via `/aico-planning`)
-- **Path B: Composite Epic (Multi-Spec)**:
-  - Create child spec subdirectories under `specs/`:
-    - `<project>-specs/epics/<seq>-<slug>/specs/01-<child-slug>/`
-    - `<project>-specs/epics/<seq>-<slug>/specs/02-<child-slug>/`
-  - For each child spec:
-    - Run `/aico-deep-dive` to analyze that specific subsystem's blast radius.
-    - Run `/aico-spec-creation` to draft its EARS contract (`SPEC-<child-slug>.md`).
-    - Run `/aico-planning` to build its vertical tracer-bullet DAG (`PLAN-<child-slug>.md`).
+### Step 3: Decompose into Child Features
+1. Break down the overarching initiative into cohesive child feature directories:
+   - `<project>-specs/epics/EC-{short_id}/features/{short_id}-{feature_1}/`
+   - `<project>-specs/epics/EC-{short_id}/features/{short_id}-{feature_2}/`
+2. For each child feature:
+   - Run `/aico-deep-dive` to analyze that subsystem's blast radius and public seams.
+   - Run `/aico-spec-creation` to draft its EARS contract (`SPEC-{short_id}-{feature}.md`) with `order: <number>`.
+   - Run `/aico-planning` to build its vertical tracer-bullet DAG (`PLAN-{short_id}-{feature}.md`) with wave-internal tasks and `order: <number>`.
 
 ### Step 4: Register in Kùzu Property Graph
 Register the epic and its relationships:
 ```cypher
-MERGE (e:Epic {id: $epic_id, title: $title, status: "pending"})
+MERGE (e:Epic {id: $epic_id, title: $title, status: "in_progress"})
 MERGE (b:Brainstorm {id: $brain_id})
 MERGE (e)-[:HAS_BRAINSTORM]->(b)
-// For each child spec:
-MERGE (s:Spec {id: $spec_id})
+// For each child feature spec:
+MERGE (s:Spec {id: $spec_id, order: $order})
 MERGE (e)-[:HAS_SPEC]->(s)
 MERGE (s)-[:DERIVED_FROM]->(b)
 ```
 
-### Step 5: Cross-Spec Milestone Convergence
+### Step 5: Cross-Feature Milestone Convergence
 An epic reaches completion only when:
-- All child specifications have passing red-to-green seam tests.
+- All child features have passing red-to-green seam tests across all internal waves.
 - Standards vs Spec two-axis review has passed (`/aico-review-loop`).
 - All human gate tasks in the Plan DAG are satisfied.
-- Frontmatter status for the epic and all child specs/plans is updated to `Completed`.
-
-If runtime defects, broken seams, or regressions are identified in an existing or completed epic, invoke **`/aico-plan-amendment`** to append remediation tasks, re-open plan/epic statuses to `In Progress`, and advance the recalculated frontier without destructive edits.
+- Frontmatter status for the epic brainstorm and all child specs/plans is updated to `Completed`.
 
 ---
 
 ## Completion Criteria
-- [ ] Epic folder created under `<project>-specs/epics/<seq>-<slug>/`.
-- [ ] Shared brainstorm completed with line-1 YAML frontmatter and saved.
-- [ ] Structural path selected (Simple flat vs. Composite multi-spec).
-- [ ] Child specs created or ready for `/aico-spec-creation`.
-- [ ] All cross-document links use relative paths.
-- [ ] Epic visible in the AICO UI Epic Hub.
+- [ ] Epic directory created under `<project>-specs/epics/EC-{short_id}/features/`.
+- [ ] Overarching brainstorm saved as `BRAIN-EC-{short_id}.md`.
+- [ ] Child feature directories created under `features/` without numeric prefixes.
+- [ ] All child specs and plans declare `order: <number>` and `aico_version: "0.1.2"`.
+- [ ] Tasks declare internal execution waves.
+- [ ] Epic visible in the AICO WebUI Epic Hub.
