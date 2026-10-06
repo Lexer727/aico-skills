@@ -58,6 +58,10 @@ The primary path for building new capabilities or applications:
 - **Situation**: After a build went sideways or an agent made recurring mistakes.
 - **Skill**: **`/aico-retro`**. Analyzes session logs to upgrade the agent environment—converting human corrections into deterministic linter rules, pre-commit hooks, or Tree-sitter queries.
 
+### 7. Dual-Axis Verification & Ground-Truth Parity Audit
+- **Situation**: Auditing generated specs/plans for blueprint conformance, verifying physical test seams on disk, or confirming in-band `@implements` and `@verifies` code coverage without dark code.
+- **Skill**: **`/aico-verify`**. Performs dual-axis verification (Axis 1: Blueprint v0.1.2 template linting; Axis 2: Codebase ground-truth parity, test seam existence, and contract traceability) and emits a prioritized remediation plan.
+
 ---
 
 ## Foundation References (Always Available)

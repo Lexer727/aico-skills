@@ -68,6 +68,9 @@ Implementation plan tasks replace simple checkboxes with explicit status fields,
 ### Rule 6: Lowercase Everywhere
 Epic IDs, feature slugs, filenames, and YAML frontmatter identifiers must be strictly lowercase (e.g., `ec-core`, `ft-fast-trace`, `spec-ft-fast-trace`).
 
+### Rule 7: Dynamic Frontier & Clean Amendment Log (No Static Active Frontier)
+Implementation plan documents must NEVER contain a static `## Active Frontier` section; task eligibility is dynamically computed by the system and agents from `Status` and `Blocked by` DAG edges. Any plan amendments must be consolidated under a single `## 3. Amendment Log` heading without duplicates.
+
 ---
 
 ## 2. Migration Execution Sequence
@@ -86,9 +89,12 @@ Epic IDs, feature slugs, filenames, and YAML frontmatter identifiers must be str
 1. Normalize absolute or broken links to portable relative links.
 2. Verify all references point to valid paths under the new directory scheme.
 
-### Phase 4: Task Plan DAG Structuring
+### Phase 4: Task Plan DAG Structuring & Frontier Cleanliness
 1. Transform flat or horizontal phase tasks into vertical tracer-bullet tasks.
 2. Establish explicit dependency graph (`blocked_by`).
+3. Strip obsolete `## 3. Active Frontier` and `## 3. Initial Active Frontier` sections from all `plan-*.md` files.
+4. Consolidate and renumber any `## 4. Amendment Log` sections into a single `## 3. Amendment Log`.
 
 ### Phase 5: Verification & Integrity Check
 Run test suites and confirm frontend loads all epics and features seamlessly.
+

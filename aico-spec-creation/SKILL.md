@@ -76,8 +76,85 @@ Add at least one `Unwanted Behavior` pattern for:
 
 ---
 
+## 4. Canonical Specification Document Structure
+
+Every feature specification (`spec-ft-<slug>.md`)—whether standalone or child feature within an epic—must strictly adhere to the following section ordering and headers:
+
+```markdown
+---
+id: spec-ft-<slug>
+type: spec
+aico_version: "0.1.2"
+epic: <"ec-<id>" | null>
+order: <integer>
+title: "<Feature Title>"
+status: <Draft|Pending|In Progress|Completed>
+derives_from: ["<ADR-####>", ...]
+created_at: "<ISO-8601 Timestamp>"
+---
+
+# Feature Specification: <Feature Title>
+
+## 1. Problem Statement & User Value
+<Context, developer problem, and architectural rationale>
+
+---
+
+## In-Scope
+- <Concrete capability or deliverable 1>
+- <Concrete capability or deliverable 2>
+
+---
+
+## 2. User Stories
+1. **US-01** (Priority: P1): As a <role>, I want <goal>, so that <benefit>.
+   - *Independent Test*: <Observable pass/fail criterion>
+
+---
+
+## 3. Functional Requirements (EARS)
+
+### Ubiquitous Requirements
+- **REQ-001**: The <system> shall <response>.
+
+### Event-Driven Requirements
+- **REQ-002**: When <trigger>, the <system> shall <response>.
+
+### State-Driven Requirements
+- **REQ-003**: While <state>, the <system> shall <response>.
+
+### Unwanted Behavior & Error Handling
+- **REQ-004**: If <condition>, then the <system> shall <response>.
+
+### Optional Feature Requirements
+- **REQ-005**: Where <feature/flag>, the <system> shall <response>.
+
+---
+
+## 4. Designated Public Test Seams
+
+### Primary Seams:
+1. **<Seam Name> (`<module::symbol>`)**:
+   - Signature: `pub fn ...`
+   - Seam Test: `<crates/.../tests/...>`
+
+---
+
+## Out-of-Scope
+- <Excluded capability 1>
+- <Excluded capability 2>
+
+---
+
+## 5. Open Clarifications
+None. Ratified in [<ADR-####>](<relative-path-to-adr>).
+```
+
+---
+
 ## Completion Criteria
 - [ ] Frontmatter includes canonical `spec-ft-<slug>` ID, `epic`, `order`, and `status`.
+- [ ] Conforms to canonical section ordering (Problem Statement, In-Scope, User Stories, Functional Requirements EARS, Designated Public Test Seams, Out-of-Scope, Open Clarifications).
 - [ ] Explicit `## In-Scope` and `## Out-of-Scope` sections populated.
 - [ ] Every requirement follows strict EARS grammar with a single "shall".
 - [ ] Negative paths and edge cases addressed.

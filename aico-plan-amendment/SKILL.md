@@ -98,25 +98,27 @@ When a pending task is no longer necessary:
      - **Reason**: Browser window frames provide sufficient OS controls per ADR-0005.
    ```
 
-### Step 3: Recompute DAG Blocking Edges & Active Frontier
+### Step 3: Recompute DAG Blocking Edges & Dynamic Frontier
 - Update all `Blocked by` and downstream dependencies.
 - Ensure no orphaned tasks or circular loops.
-- Identify the updated **Active Frontier** (all unblocked `Pending` tasks).
+- Identify the updated unblocked `Pending` tasks dynamically (do NOT write a static `## 3. Active Frontier` section to the plan).
 
 ### Step 4: Reopen Plan & Epic Status
 - In the plan's YAML frontmatter:
   ```yaml
   ---
-  id: PLAN-CORE-006
+  id: plan-ft-core-webui-shell
   type: plan
-  aico_version: "0.1.1"
-  epic: "001-aico-core"
+  aico_version: "0.1.2"
+  epic: "ec-core"
   title: "WebUI Application Shell, Navigation & Dockable Layout"
   status: "In Progress"
   ---
   ```
-- If parent Epic was marked completed, reopen its `status` in `BRAIN-*.md` to `In Progress`.
-- Add an **Amendment Log** section at the bottom of the plan document documenting the date, reason, and amended tasks.
+- If parent Epic was marked completed, reopen its `status` in its frontmatter to `In Progress`.
+- Record the amendment in the single **Amendment Log** (`## 3. Amendment Log`):
+  - **Single Header Rule**: If `## 3. Amendment Log` (or `## Amendment Log`) already exists, append new timestamped bullet points directly into the existing section. **NEVER create duplicate `## Amendment Log` headers**.
+  - **No Static Frontier Section**: Do not generate a `## Active Frontier` section.
 
 ### Step 5: Sync with Kùzu Property Graph
 Update the task graph in Kùzu:
@@ -144,5 +146,5 @@ SET old.status = $mutation_status, old.mutation_reason = $reason
 - [ ] Any canceled or rewritten tasks include mandatory `Reason` and `Rewrite Target`.
 - [ ] Newly added tasks declare `Status`, `Addresses`, `Blocked by`, `What it delivers`, and `Verification Seam`.
 - [ ] DAG dependency graph verified with no circular dependencies.
-- [ ] Updated Active Frontier computed and displayed to developer.
-- [ ] Plan Amendment Log recorded with timestamp and rationale.
+- [ ] No static `## Active Frontier` section created or retained.
+- [ ] Single consolidated Plan Amendment Log recorded with timestamp and rationale (no duplicate headers).

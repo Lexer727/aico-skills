@@ -65,8 +65,8 @@ Assign explicit dependency prerequisites (`blocked_by: [TASK-..., ...]`).
 - A task with no blockers can start immediately (`status: "Pending"`).
 - Never introduce circular dependencies.
 
-### Step 3: Compute the Active Frontier
-Identify the set of unblocked tasks ready for immediate execution:
+### Step 3: Dynamic Frontier Evaluation (No Static Markdown Section)
+The Active Frontier is dynamically derived at runtime by evaluating each task's `Status` and its `Blocked by` dependency statuses:
 ```cypher
 MATCH (t:Task {status: "pending"})
 WHERE NOT EXISTS {
@@ -75,4 +75,6 @@ WHERE NOT EXISTS {
 }
 RETURN t.id AS ready_task
 ```
-Advance the frontier as tasks transition to `Done`.
+- **Dynamic Source of Truth**: Never write a static `## 3. Active Frontier` section in the plan markdown. Static sections become immediately obsolete when tasks progress.
+- **Runtime Graph Traversal**: Tools, agents, and the WebUI dynamically determine which tasks are unblocked by checking if all prerequisite tasks in `Blocked by` have transitioned to `Done` or `Completed`.
+

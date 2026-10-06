@@ -45,6 +45,3 @@ If a task is canceled or rewritten, never delete or overwrite it. Instead, set:
   - **Rewrite Target**: [TASK-XYZ-V2](#task-xyz-v2) or {reference to replacement}
 -->
 
-## 3. Initial Active Frontier
-List of tasks with no unresolved blockers:
-- `TASK-001`: Ready to be grabbed by `/aico-test-scaffolding`.
