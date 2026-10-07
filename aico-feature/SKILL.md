@@ -47,37 +47,40 @@ When invoked, `aico-feature` accepts:
 
 ---
 
-## 3. Process
+## 3. Process & Phase Separation
 
 ```
 /aico-feature (Atomic Engine)
        │
+       ▼ [PHASE 1: SCAFFOLDING & PLANNING]
        ├── 1. Resolve Path: features/ft-<slug>/ OR epics/ec-<id>/features/ft-<slug>/
-       │
        ├── 2. /aico-deep-dive (Analyze subsystem boundaries, blast radius & test seams)
-       │
        ├── 3. /aico-spec-creation (Draft spec-ft-<slug>.md with EARS requirements)
+       └── 4. /aico-planning (Draft plan-ft-<slug>.md with vertical tasks in DAG)
        │
-       ├── 4. /aico-planning (Draft plan-ft-<slug>.md with vertical tasks in DAG)
+       ▼ [MANDATORY HUMAN APPROVAL GATE - STOP]
+       │ (Halt! Present spec & plan to developer for review. Await explicit approval.)
        │
-       └── 5. Delivery Execution:
-              - /aico-test-scaffolding (Failing red contract tests @verifies)
-              - /aico-implementation    (Minimal green domain code @implements)
-              - /aico-review-loop       (Two-axis verification & review gate)
+       ▼ [PHASE 2: DELIVERY EXECUTION - ONLY UPON USER APPROVAL]
+       ├── 5. /aico-test-scaffolding (Failing red contract tests @verifies)
+       ├── 6. /aico-implementation    (Minimal green domain code @implements)
+       └── 7. /aico-review-loop       (Two-axis verification & review gate)
 ```
 
-### Step 1: Scaffold Feature Container
+### Phase 1: Scaffolding & Planning
+
+#### Step 1: Scaffold Feature Container
 Create target directory:
 - Standalone: `<specs-root>/features/ft-<feature_slug>/`
 - Epic Child: `<specs-root>/epics/ec-<short_id>/features/ft-<feature_slug>/`
 
-### Step 2: System Boundary & Blast Radius Analysis
+#### Step 2: System Boundary & Blast Radius Analysis
 Invoke **`/aico-deep-dive`**:
 - Identify touched crates, modules, and public exports.
 - Designate primary and secondary test seams.
 - (Optional) Save `dive-ft-<feature_slug>.md` if non-trivial architectural boundaries exist.
 
-### Step 3: Draft Formal EARS Specification
+#### Step 3: Draft Formal EARS Specification
 Invoke **`/aico-spec-creation`**:
 - Write `spec-ft-<feature_slug>.md` with frontmatter:
   ```yaml
@@ -97,7 +100,7 @@ Invoke **`/aico-spec-creation`**:
 - Populate explicit `## In-Scope` and `## Out-of-Scope` boundaries.
 - Designate public test seams in code.
 
-### Step 4: Decompose into Task Plan DAG
+#### Step 4: Decompose into Task Plan DAG
 Invoke **`/aico-planning`**:
 - Write `plan-ft-<feature_slug>.md` with frontmatter:
   ```yaml
@@ -109,22 +112,36 @@ Invoke **`/aico-planning`**:
   order: 1
   title: "<Feature Title> Implementation Plan"
   status: Draft
+  repositories: ["{repo_id}"]
   derives_from: ["spec-ft-<feature_slug>"]
   created_at: "YYYY-MM-DDTHH:MM:SSZ"
   ---
   ```
 - Structure tasks into vertical tracer bullets with explicit `blocked_by` dependencies.
 
-### Step 5: Test Scaffolding & Implementation
+#### Step 5: Human Review & Approval Gate (MANDATORY STOP)
+> [!IMPORTANT]
+> **Phase 1 Concludes Here**: Once `spec-ft-*.md` and `plan-ft-*.md` are generated and verified, the agent **MUST STOP**.
+> - Present the EARS requirements, designated test seams, and DAG task plan to the developer.
+> - **DO NOT start Phase 2 (Test Scaffolding or Implementation)** without explicit developer confirmation to begin.
+> - Never assume approval or bundle planning and code changes into a single turn.
+
+---
+
+### Phase 2: Delivery Execution (Only After Developer Approval)
+
+#### Step 6: Test Scaffolding & Implementation
+Triggered ONLY after the developer explicitly approves the plan:
 1. Invoke **`/aico-test-scaffolding`** to write failing contract tests (`@verifies`).
 2. Invoke **`/aico-implementation`** to write green code (`@implements`).
 3. Run `/aico-review-loop` and update frontmatter status to `Completed`.
 
 ---
 
-## Completion Criteria
+## Completion Criteria (Phase 1: Scaffolding & Planning)
 - [ ] Feature directory created with `ft-` prefix (`features/ft-<slug>/` or `epics/ec-<id>/features/ft-<slug>/`).
 - [ ] Deep dive blast radius analyzed and seams designated.
 - [ ] `spec-ft-<slug>.md` drafted with canonical frontmatter (`epic: "ec-<id>"` or `null`).
-- [ ] `plan-ft-<slug>.md` drafted with vertical tracer-bullet tasks and explicit DAG dependencies.
+- [ ] `plan-ft-<slug>.md` drafted with vertical tracer-bullet tasks, repositories array, and explicit DAG dependencies.
 - [ ] Visible in the AICO WebUI (Epic Hub or Standalone Feature Hub).
+- [ ] **Agent halted at the Human Review Gate and requested user approval before writing any code.**

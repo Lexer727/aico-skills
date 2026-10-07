@@ -57,7 +57,7 @@ From /aico-start ───> /aico-epic ───> Scaffold Container ───> 
 1. Break down the overarching initiative into cohesive child feature slugs:
    - `ft-{short_id}-{feature_1}`
    - `ft-{short_id}-{feature_2}`
-2. For **each child feature**, invoke **`/aico-feature`** with:
+2. For **each child feature**, invoke **`/aico-feature` (Phase 1: Scaffolding & Planning)** with:
    - `slug`: `ft-{short_id}-{feature_n}`
    - `epic`: `"ec-{short_id}"`
    - `target_dir`: `epics/ec-{short_id}/features/ft-{short_id}-{feature_n}/`
@@ -76,8 +76,17 @@ MERGE (e)-[:HAS_SPEC]->(s)
 MERGE (s)-[:DERIVED_FROM]->(b)
 ```
 
-### Step 5: Cross-Feature Milestone Convergence
-An epic reaches completion only when:
+### Step 5: Human Review & Approval Gate (MANDATORY STOP)
+> [!IMPORTANT]
+> **Strict SDD Phase Boundary**: The framing and planning of an Epic concludes once `brain-ec-*.md` and all child `spec-ft-*.md` and `plan-ft-*.md` artifacts are created and verified.
+> 
+> - **MANDATORY STOP**: The agent MUST STOP execution here. Present the scaffolded epic summary, child feature specifications, and task DAG frontiers to the developer.
+> - **DO NOT proceed to implementation** (`/aico-test-scaffolding` or `/aico-implementation`) without explicit user review and instruction to begin execution.
+> - Never bundle scaffolding and implementation into a single turn or confirmation question.
+
+### Step 6: Cross-Feature Milestone Convergence & Execution
+Only entered after the developer approves the plans and explicitly commands execution:
+- Implement features via `/aico-test-scaffolding` (red tests) and `/aico-implementation` (green code).
 - All child features have passing red-to-green seam tests across their task plans.
 - Standards vs Spec two-axis review has passed (`/aico-review-loop`).
 - All human gate tasks in the Plan DAG are satisfied.
@@ -85,11 +94,12 @@ An epic reaches completion only when:
 
 ---
 
-## Completion Criteria
+## Completion Criteria (Framing & Planning Phase)
 - [ ] Epic directory created under `<project>-specs/epics/ec-{short_id}/features/`.
 - [ ] Overarching brainstorm saved as `brain-ec-{short_id}.md`.
 - [ ] Child feature directories created under `features/` with `ft-` prefix.
-- [ ] Child features created via `/aico-feature` calls.
+- [ ] Child features created via `/aico-feature` (Phase 1: spec & plan).
 - [ ] All child specs and plans declare `order: <number>`, `aico_skills_version` (matching `aico-skills/VERSION`), and `epic: "ec-{short_id}"`.
 - [ ] Child feature tasks organized in a vertical tracer-bullet DAG with explicit dependencies.
 - [ ] Epic visible in the AICO WebUI Epic Hub.
+- [ ] **Agent halted at the Human Review Gate and requested user approval before writing any code.**

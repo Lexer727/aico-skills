@@ -86,6 +86,9 @@ Evaluate against the triage criteria:
   - Summarize the atomic scope, designated seams, and target directory (`features/ft-<feature_slug>/`).
   - Handoff to `/aico-feature` passing the requirements context.
 
+> [!NOTE]
+> **Scaffolding vs. Implementation Boundary**: Handoff to `/aico-epic` or `/aico-feature` exclusively scopes and drafts the specifications and task DAG plans (Phase 1: Planning). Downstream skills must **never** immediately begin writing code or tests without an explicit intermediate developer review and approval gate.
+
 ---
 
 ## Completion Criteria
@@ -94,3 +97,4 @@ Evaluate against the triage criteria:
 - [ ] Scope evaluated against Epic vs. Standalone Feature criteria.
 - [ ] Developer confirmed the path (Epic or Standalone Feature).
 - [ ] Routed to `/aico-epic` or `/aico-feature` with pre-populated context.
+- [ ] Explicitly communicated that specifications and plans will be presented for developer review before any code is modified.

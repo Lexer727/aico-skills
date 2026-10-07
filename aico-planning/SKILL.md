@@ -83,3 +83,12 @@ RETURN t.id AS ready_task
 - **Dynamic Source of Truth**: Never write a static `## 3. Active Frontier` section in the plan markdown. Static sections become immediately obsolete when tasks progress.
 - **Runtime Graph Traversal**: Tools, agents, and the WebUI dynamically determine which tasks are unblocked by checking if all prerequisite tasks in `Blocked by` have transitioned to `Done` or `Completed`.
 
+### Step 4: Human Review & Approval Gate (MANDATORY STOP)
+> [!IMPORTANT]
+> **Planning Concludes Here**: Once the task DAG is generated and verified against the specification, the planning skill is **complete**.
+> - **MANDATORY STOP**: The agent MUST STOP and present the plan to the developer. Highlight:
+>   1. The initial unblocked frontier tasks (`status: "Pending"`).
+>   2. Target repositories declared in `repositories: [...]`.
+>   3. Designated public test seams.
+> - **DO NOT begin implementation** without explicit user review and instruction to execute.
+
