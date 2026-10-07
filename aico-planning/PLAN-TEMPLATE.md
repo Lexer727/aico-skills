@@ -1,7 +1,7 @@
 ---
 id: plan-ft-{feature_slug}
 type: plan
-aico_skills_version: "0.1.2"
+aico_skills_version: "{aico_skills_version}" # Read dynamically from aico-skills/VERSION
 epic: "ec-{short_id}" # or null if standalone feature
 order: 1
 title: "{Title} Implementation Plan"

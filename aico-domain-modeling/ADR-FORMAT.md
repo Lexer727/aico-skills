@@ -8,7 +8,7 @@ All ADRs must begin with a canonical YAML frontmatter block on line 1 without du
 ---
 id: ADR-{NNNN}
 type: adr
-aico_skills_version: "0.1.2"
+aico_skills_version: "{aico_skills_version}" # Read dynamically from aico-skills/VERSION
 title: "{Decision Title}"
 status: Completed
 derives_from: []

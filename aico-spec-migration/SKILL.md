@@ -22,7 +22,7 @@ Every artifact file must start with a valid YAML frontmatter block on line 1:
 ---
 id: <artifact-id>
 type: <spec|plan|brainstorm|deep_dive|adr>
-aico_skills_version: "0.1.2"
+aico_skills_version: "{aico_skills_version}" # Read dynamically from aico-skills/VERSION
 epic: "ec-<short_id>" # or null for standalone features / system ADRs
 order: 1              # Integer sequence for UI and roadmap sorting
 title: "<Title>"
@@ -82,7 +82,7 @@ Implementation plan documents must NEVER contain a static `## Active Frontier` s
 4. Rename files: `spec-ft-<name>.md`, `plan-ft-<name>.md`, `brain-ft-<name>.md`.
 
 ### Phase 2: Frontmatter Ingestion & Normalization
-1. Insert line-1 YAML frontmatter with `id`, `type`, `aico_skills_version: "0.1.2"` (governed by `aico-skills/VERSION`), `epic`, `order`, `title`, `status`, `derives_from`, `created_at`.
+1. Insert line-1 YAML frontmatter with `id`, `type`, `aico_skills_version: "{aico_skills_version}"` (read dynamically from `aico-skills/VERSION`), `epic`, `order`, `title`, `status`, `derives_from`, `created_at`.
 2. Remove redundant metadata blocks from markdown bodies.
 
 ### Phase 3: Path & Relative Link Audit

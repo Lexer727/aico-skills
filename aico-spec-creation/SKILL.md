@@ -31,7 +31,7 @@ Every functional requirement **must strictly conform** to one of the 5 canonical
 1. **Mandatory Line-1 YAML Frontmatter**: Must include:
    - `id`: `spec-ft-{feature_slug}` (e.g. `spec-ft-core-discovery`, `spec-ft-fast-trace`).
    - `type: spec`
-   - `aico_skills_version`: `"0.1.2"` (governed by `aico-skills/VERSION`)
+   - `aico_skills_version`: `"{aico_skills_version}"` (read dynamically from the `aico-skills/VERSION` file)
    - `epic`: `"ec-{short_id}"` (or `null` if standalone).
    - `order`: `<integer>` (governs visual sort sequence without altering directory names).
    - `title`: Human-readable capability title.
@@ -84,7 +84,7 @@ Every feature specification (`spec-ft-<slug>.md`)—whether standalone or child 
 ---
 id: spec-ft-<slug>
 type: spec
-aico_skills_version: "0.1.2"
+aico_skills_version: "{aico_skills_version}" # Read dynamically from aico-skills/VERSION
 epic: <"ec-<id>" | null>
 order: <integer>
 title: "<Feature Title>"

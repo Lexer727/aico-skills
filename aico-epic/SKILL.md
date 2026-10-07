@@ -18,7 +18,7 @@ An **Epic** is the strategic container for large initiatives that decompose into
 2. **Child Features Directory**: Child features are stored under `epics/ec-<short_id>/features/ft-{short_id}-{feature_suffix}/` (e.g. `features/ft-core-host-runtime/`).
 3. **Mandatory `ft-` Feature Prefix**: Every child feature must have the `ft-` prefix.
 4. **Decoupled Ordering**: Visual and execution sequence is declared via `order: <number>` in YAML frontmatter, never by prefixing directory or filenames with numbers.
-5. **Universal Line-1 YAML Frontmatter**: Every artifact (`brain-ec-*.md`, `spec-ft-*.md`, `plan-ft-*.md`) must include canonical frontmatter with `id`, `type`, `aico_skills_version: "0.1.2"` (governed by `aico-skills/VERSION`), `epic: "ec-{short_id}"`, `order: <number>`, `title`, `status`, `derives_from`, and `created_at`.
+5. **Universal Line-1 YAML Frontmatter**: Every artifact (`brain-ec-*.md`, `spec-ft-*.md`, `plan-ft-*.md`) must include canonical frontmatter with `id`, `type`, `aico_skills_version: "{aico_skills_version}"` (read dynamically from the `aico-skills/VERSION` file), `epic: "ec-{short_id}"`, `order: <number>`, `title`, `status`, `derives_from`, and `created_at`.
 6. **Strict Relative Linking**: All cross-document links must use portable relative markdown paths (e.g. `../../adr/...`), never absolute `file:///` URLs.
 
 ---
@@ -44,7 +44,7 @@ From /aico-start ───> /aico-epic ───> Scaffold Container ───> 
    ---
    id: brain-ec-{short_id}
    type: brainstorm
-   aico_skills_version: "0.1.2"
+   aico_skills_version: "{aico_skills_version}" # Read dynamically from aico-skills/VERSION
    epic: "ec-{short_id}"
    title: "Epic Title"
    status: In Progress
@@ -90,6 +90,6 @@ An epic reaches completion only when:
 - [ ] Overarching brainstorm saved as `brain-ec-{short_id}.md`.
 - [ ] Child feature directories created under `features/` with `ft-` prefix.
 - [ ] Child features created via `/aico-feature` calls.
-- [ ] All child specs and plans declare `order: <number>`, `aico_skills_version: "0.1.2"`, and `epic: "ec-{short_id}"`.
+- [ ] All child specs and plans declare `order: <number>`, `aico_skills_version` (matching `aico-skills/VERSION`), and `epic: "ec-{short_id}"`.
 - [ ] Child feature tasks organized in a vertical tracer-bullet DAG with explicit dependencies.
 - [ ] Epic visible in the AICO WebUI Epic Hub.
