@@ -48,6 +48,25 @@ function getSkillsHarnessVersion() {
 
 const expectedSkillsVersion = getSkillsHarnessVersion();
 
+// Discover project repositories from .aico-project.json if available
+// @implements spec-ft-git-skills-traceability::REQ-004
+function getKnownProjectRepositories() {
+  const manifestPath = path.resolve(specsDir, '.aico-project.json');
+  if (fs.existsSync(manifestPath)) {
+    try {
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+      if (Array.isArray(manifest.repositories)) {
+        return new Set(manifest.repositories.map(r => r.id));
+      } else if (manifest.name) {
+        return new Set([manifest.name, `${manifest.name}-specs`, `${manifest.name}-skills`]);
+      }
+    } catch {}
+  }
+  return null;
+}
+
+const knownProjectRepos = getKnownProjectRepositories();
+
 // Data structures for verification report
 const report = {
   timestamp: new Date().toISOString(),
@@ -320,6 +339,23 @@ function auditArtifact(filePath) {
     const amendmentHeaders = content.match(/##\s*(\d+\.)?\s*Amendment Log/gi);
     if (amendmentHeaders && amendmentHeaders.length > 1) {
       errors.push(`Duplicate Amendment Log headers found (${amendmentHeaders.length} occurrences). Must be single consolidated header.`);
+    }
+
+    // Rule: Plan Multi-Repo Traceability
+    // @implements spec-ft-git-skills-traceability::REQ-003
+    // @implements spec-ft-git-skills-traceability::REQ-004
+    if (fm.repositories !== undefined) {
+      if (!Array.isArray(fm.repositories)) {
+        errors.push(`Field "repositories" must be an array of strings (found: ${typeof fm.repositories})`);
+      } else if (fm.repositories.length === 0) {
+        warnings.push('Plan declares empty "repositories: []" list');
+      } else if (knownProjectRepos) {
+        for (const repoId of fm.repositories) {
+          if (!knownProjectRepos.has(repoId)) {
+            warnings.push(`Declared repository "${repoId}" is not registered in .aico-project.json`);
+          }
+        }
+      }
     }
   }
 

@@ -5,7 +5,8 @@ aico_skills_version: "{aico_skills_version}" # Read dynamically from aico-skills
 epic: "ec-{short_id}" # or null if standalone feature
 order: 1
 title: "{Title} Implementation Plan"
-status: Pending
+status: "Pending"
+repositories: ["{repo_id}"] # Declares codebase repositories touched by this plan (single source of truth)
 derives_from: ["spec-ft-{feature_slug}"]
 created_at: "{YYYY-MM-DDTHH:MM:SSZ}"
 ---

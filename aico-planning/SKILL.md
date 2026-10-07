@@ -39,8 +39,13 @@ Break the work down using tracer-bullet vertical slices:
    - `order`: `<integer>` (governs visual sort sequence without altering directory names).
    - `title`: Human-readable capability title.
    - `status`: `Draft` | `Pending` | `In Progress` | `Completed`.
+   - `repositories`: `["<repo_id>", ...]` (single source of truth declaring codebase repositories touched by this plan).
    - `derives_from`: List of derived `spec-ft-*` IDs.
    - `created_at`: ISO 8601 UTC timestamp.
+
+### 2.1 Multi-Repo Traceability (Single Source of Truth)
+- **Sole Authority**: Implementation plans are the single source of truth for codebase repository targeting. Specifications (`spec-ft-*.md`) describe domain requirements independently of target physical codebases.
+- **Dynamic Roll-Up**: The WebUI, agents, and background inspection engines dynamically aggregate declared repositories from child feature plans up to Features, Epics, and the Home Dashboard without duplicate manual entries.
 2. **Canonical Task Template**:
    ```markdown
    - **TASK-{prefix}-{suffix}-{seq}**: Task Title
