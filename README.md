@@ -25,7 +25,7 @@
 | **[`aico-diagnosing-bugs`](aico-diagnosing-bugs/SKILL.md)** | Tight-loop defect diagnosis & seam regression locking | Model/User | Passing regression test & clean code |
 | **[`aico-review-loop`](aico-review-loop/SKILL.md)** | Two-axis review (Standards vs Spec) & Kùzu graph convergence | Model/User | Convergence report & Phase N tasks |
 | **[`aico-verify`](aico-verify/SKILL.md)** | Dual-axis blueprint conformance & ground-truth codebase parity audit | User-invoked | Dual-axis verification report & remediation plan |
-| **[`aico-spec-migration`](aico-spec-migration/SKILL.md)** | Universal frontmatter & relative link migration to v0.1.2 | User-invoked | Migrated SDD specs & ADR repository |
+| **[`aico-spec-migration`](aico-spec-migration/SKILL.md)** | Universal frontmatter & relative link migration to canonical blueprint standards | User-invoked | Migrated AICO specs & ADR repository |
 | **[`aico-codebase-health`](aico-codebase-health/SKILL.md)** | Kùzu graph structural scan for module deepening | User-invoked | Visual HTML before/after report |
 | **[`aico-retro`](aico-retro/SKILL.md)** | Session retrospective & environment evolution | User-invoked | Linter rules, pre-commit hooks, pointers |
 | **[`aico-domain-modeling`](aico-domain-modeling/SKILL.md)** | Ubiquitous domain language & Architecture Decision Records | Model/User | `GLOSSARY.md` & `docs/adr/*.md` |

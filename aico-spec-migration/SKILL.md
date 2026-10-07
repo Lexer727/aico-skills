@@ -1,18 +1,18 @@
 ---
 name: aico-spec-migration
-description: "Audit, normalize, and upgrade existing AICO Spec-Driven Development (SDD) repositories to target version 0.1.2. Enforces ec- epic naming, ft- feature naming, frontmatter order attributes, relative links, and vertical tracer-bullet DAG task execution."
+description: "Audit, normalize, and upgrade existing AICO repositories to canonical blueprint standards (governed by VERSION). Enforces ec- epic naming, ft- feature naming, frontmatter order attributes, relative links, and vertical tracer-bullet DAG task execution."
 disable-model-invocation: false
 ---
 
-# AICO Spec Migration: Repository & Artifact Modernization (v0.1.2)
+# AICO Spec Migration: Repository & Artifact Modernization
 
-Upgrade legacy AICO specifications, plans, brainstorms, and architecture decision records (ADRs) to the canonical **0.1.2 Blueprint Standard** established in `ADR-0010`.
+Upgrade legacy AICO specifications, plans, brainstorms, and architecture decision records (ADRs) to the canonical **Blueprint Standard** (governed by `VERSION`) established in `ADR-0010`.
 
-Use `/aico-spec-migration` when upgrading a specs repository or auditing an existing codebase for SDD v0.1.2 compliance.
+Use `/aico-spec-migration` when upgrading a specs repository or auditing an existing codebase for canonical AICO specification compliance.
 
 ---
 
-## 1. Target 0.1.2 Blueprint Rules
+## 1. Target Blueprint Rules
 
 Every migrated artifact must comply with these 6 mandatory rules:
 

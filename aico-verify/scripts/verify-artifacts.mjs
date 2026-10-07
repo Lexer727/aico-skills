@@ -3,9 +3,9 @@
 /**
  * verify-artifacts.mjs
  * 
- * Comprehensive automated verification engine for AICO Spec-Driven Development (SDD).
+ * Comprehensive automated verification engine for AICO artifacts and codebase ground-truth parity.
  * Evaluates two distinct axes:
- *   Axis 1: Artifact Blueprint & Template Conformance (v0.1.2)
+ *   Axis 1: Artifact Blueprint & Template Conformance
  *   Axis 2: Codebase Ground-Truth Coverage, Seam Existence & Traceability
  */
 
@@ -193,7 +193,7 @@ function auditArtifact(filePath) {
 
   const fm = frontmatter || {};
 
-  // Rule 2: Mandated Frontmatter Fields (v0.1.2)
+  // Rule 2: Mandated Frontmatter Fields
   if (hasFrontmatterOnLine1) {
     if (!fm.id) errors.push('Missing required frontmatter field: "id"');
     if (!fm.type) errors.push('Missing required frontmatter field: "type"');
@@ -583,7 +583,7 @@ function auditCodebase(codeRoot) {
 function printHumanReport() {
   const c = colors;
   console.log(`\n${c.bold}${c.cyan}======================================================================${c.reset}`);
-  console.log(`${c.bold}${c.cyan}             AICO SDD ARTIFACT & CODEBASE VERIFICATION                ${c.reset}`);
+  console.log(`${c.bold}${c.cyan}             AICO ARTIFACT & CODEBASE VERIFICATION                ${c.reset}`);
   console.log(`${c.bold}${c.cyan}======================================================================${c.reset}`);
   console.log(`${c.dim}Specs Root   : ${specsDir}${c.reset}`);
   if (codeDir) {
@@ -638,7 +638,7 @@ function printHumanReport() {
     }
   }
   if (issueCount === 0) {
-    console.log(`  ${c.green}✔ All ${report.summary.totalArtifacts} artifacts strictly conform to Blueprint v0.1.2 standards.${c.reset}`);
+    console.log(`  ${c.green}✔ All ${report.summary.totalArtifacts} artifacts strictly conform to Blueprint v${expectedSkillsVersion} standards.${c.reset}`);
   }
 
   // SECTION 3: Ground-Truth Seams Audit

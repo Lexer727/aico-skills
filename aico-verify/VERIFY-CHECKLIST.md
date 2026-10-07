@@ -1,6 +1,6 @@
 # AICO Verification Checklist & Audit Rubric
 
-A quick-reference checklist for auditing SDD artifacts and codebase ground-truth compliance.
+A quick-reference checklist for auditing AICO artifacts and codebase ground-truth compliance.
 
 ---
 

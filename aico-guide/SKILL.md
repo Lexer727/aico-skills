@@ -60,7 +60,7 @@ The primary path for building new capabilities or applications:
 
 ### 7. Dual-Axis Verification & Ground-Truth Parity Audit
 - **Situation**: Auditing generated specs/plans for blueprint conformance, verifying physical test seams on disk, or confirming in-band `@implements` and `@verifies` code coverage without dark code.
-- **Skill**: **`/aico-verify`**. Performs dual-axis verification (Axis 1: Blueprint v0.1.2 template linting; Axis 2: Codebase ground-truth parity, test seam existence, and contract traceability) and emits a prioritized remediation plan.
+- **Skill**: **`/aico-verify`**. Performs dual-axis verification (Axis 1: Blueprint template linting; Axis 2: Codebase ground-truth parity, test seam existence, and contract traceability) and emits a prioritized remediation plan.
 
 ---
 

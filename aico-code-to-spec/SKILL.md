@@ -1,6 +1,6 @@
 ---
 name: aico-code-to-spec
-description: "Reverse-engineer an existing codebase (brownfield repo) into formal AICO Spec-Driven Design artifacts: extract ubiquitous domain terms, reconstruct epics, generate EARS specifications, and designate test seams."
+description: "Reverse-engineer an existing codebase (brownfield repo) into formal AICO artifacts: extract ubiquitous domain terms, reconstruct epics, generate EARS specifications, and designate test seams."
 disable-model-invocation: false
 ---
 
