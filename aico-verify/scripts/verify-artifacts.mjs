@@ -344,16 +344,17 @@ function auditArtifact(filePath) {
     // Rule: Plan Multi-Repo Traceability
     // @implements spec-ft-git-skills-traceability::REQ-003
     // @implements spec-ft-git-skills-traceability::REQ-004
-    if (fm.repositories !== undefined) {
-      if (!Array.isArray(fm.repositories)) {
-        errors.push(`Field "repositories" must be an array of strings (found: ${typeof fm.repositories})`);
-      } else if (fm.repositories.length === 0) {
-        warnings.push('Plan declares empty "repositories: []" list');
-      } else if (knownProjectRepos) {
-        for (const repoId of fm.repositories) {
-          if (!knownProjectRepos.has(repoId)) {
-            warnings.push(`Declared repository "${repoId}" is not registered in .aico-project.json`);
-          }
+    // @implements spec-ft-git-skills-traceability::REQ-005
+    if (fm.repositories === undefined) {
+      warnings.push('Plan is missing required frontmatter field "repositories: [\\"...\\"]"');
+    } else if (!Array.isArray(fm.repositories)) {
+      errors.push(`Field "repositories" must be an array of strings (found: ${typeof fm.repositories})`);
+    } else if (fm.repositories.length === 0) {
+      warnings.push('Plan declares empty "repositories: []" list');
+    } else if (knownProjectRepos) {
+      for (const repoId of fm.repositories) {
+        if (!knownProjectRepos.has(repoId)) {
+          warnings.push(`Declared repository "${repoId}" is not registered in .aico-project.json`);
         }
       }
     }
