@@ -746,7 +746,10 @@ function printHumanReport() {
 
 // Execution main
 async function main() {
-  const markdownFiles = findFiles(specsDir, (f, name) => name.endsWith('.md'));
+  const markdownFiles = findFiles(specsDir, (f, name) => {
+    const upper = name.toUpperCase();
+    return name.endsWith('.md') && upper !== 'GEMINI.MD' && upper !== 'AGENTS.MD' && upper !== 'README.MD';
+  });
   if (markdownFiles.length === 0) {
     console.error(`Error: No markdown files found under specs directory: ${specsDir}`);
     process.exit(1);
