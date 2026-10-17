@@ -24,7 +24,7 @@ The second half of the red-to-green loop. Implement only enough production code 
 Every public symbol satisfying an EARS requirement must include an in-band annotation:
 
 ```typescript
-// @implements SPEC-AUTH-001::REQ-002
+// @implements ft-<feature>::TASK-###::REQ-###
 export function validateSessionToken(token: string): SessionVerdict {
   // minimal implementation
 }
@@ -32,14 +32,14 @@ export function validateSessionToken(token: string): SessionVerdict {
 
 In Python:
 ```python
-# @implements SPEC-AUTH-001::REQ-002
+# @implements ft-<feature>::TASK-###::REQ-###
 def validate_session_token(token: str) -> SessionVerdict:
     ...
 ```
 
 In Rust:
 ```rust
-// @implements SPEC-AUTH-001::REQ-002
+// @implements ft-<feature>::TASK-###::REQ-###
 pub fn validate_session_token(token: &str) -> Result<SessionVerdict, AuthError> {
     ...
 }

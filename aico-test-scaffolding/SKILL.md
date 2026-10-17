@@ -24,7 +24,7 @@ Test scaffolding is the first half of the red-to-green loop. It produces verifia
 Every test case must include an in-band annotation linking it to its target EARS requirement:
 
 ```typescript
-// @verifies SPEC-AUTH-001::REQ-002
+// @verifies ft-<feature>::TASK-###::REQ-###
 test("rejects expired bearer token with 401 Unauthorized", async () => {
   // test implementation
 });
@@ -32,14 +32,14 @@ test("rejects expired bearer token with 401 Unauthorized", async () => {
 
 In Python:
 ```python
-# @verifies SPEC-AUTH-001::REQ-002
+# @verifies ft-<feature>::TASK-###::REQ-###
 def test_rejects_expired_bearer_token():
     ...
 ```
 
 In Rust:
 ```rust
-// @verifies SPEC-AUTH-001::REQ-002
+// @verifies ft-<feature>::TASK-###::REQ-###
 #[test]
 fn test_rejects_expired_bearer_token() {
     ...
@@ -69,5 +69,5 @@ MERGE (t)-[:VERIFIES]->(r)
 
 ## Completion Criteria
 - [ ] Test written strictly against the agreed public seam.
-- [ ] In-band `// @verifies SPEC-ID::REQ-ID` tag attached.
+- [ ] In-band `// @verifies ft-<feature>::TASK-###::REQ-###` tag attached.
 - [ ] Local test runner executed and confirms **RED** state.

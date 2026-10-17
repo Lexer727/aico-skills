@@ -55,7 +55,7 @@ Show the ranked list to the user before testing.
 1. Turn the minimised reproduction into a permanent regression test at a public seam.
 2. Tag the test:
    ```typescript
-   // @verifies SPEC-CORE-001::BUG-042
+   // @verifies ft-<feature>::TASK-###::REQ-###
    test("handles concurrent cache eviction without panic", async () => { ... });
    ```
 3. Watch the test fail.

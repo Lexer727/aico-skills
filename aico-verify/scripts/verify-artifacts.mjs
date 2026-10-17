@@ -99,9 +99,10 @@ const report = {
   artifacts: [], // { path, id, type, status, errors: [], warnings: [] }
   traceability: {
     declaredRequirements: {}, // specId -> [reqId]
-    implementsAnnotations: {}, // specId::reqId -> [ { file, line } ]
-    verifiesAnnotations: {},   // specId::reqId -> [ { file, line } ]
-    orphanAnnotations: [],     // [ { file, line, kind, specId, reqId } ]
+    declaredTasks: {},        // taskId -> { planFile, addresses: [reqId] }
+    implementsAnnotations: {}, // specId::reqId -> [ { file, line, taskId } ]
+    verifiesAnnotations: {},   // specId::reqId -> [ { file, line, taskId } ]
+    orphanAnnotations: [],     // [ { file, line, kind, specId, taskId, reqId } ]
   },
   seams: [], // { task, seamPath, exists, resolvedPath, suggestedPath }
   statusContradictions: [], // { file, message }
@@ -439,6 +440,11 @@ function auditArtifact(filePath) {
       };
 
       planTasks.push(task);
+      const addressesList = addressesMatch ? (addressesMatch[1].match(/REQ-[0-9]{3,4}/g) || []) : [];
+      report.traceability.declaredTasks[taskId] = {
+        planFile: relPath,
+        addresses: addressesList,
+      };
 
       if (!statusMatch) {
         warnings.push(`${taskId}: Missing explicit "**Status**:" field`);
@@ -522,8 +528,8 @@ function auditCodebase(codeRoot) {
     }
   }
 
-  const verifiesRegex = /(?:\/\/|#)\s*@verifies\s+([A-Za-z0-9\-_]+)::([A-Za-z0-9\-_]+)/g;
-  const implementsRegex = /(?:\/\/|#)\s*@implements\s+([A-Za-z0-9\-_]+)::([A-Za-z0-9\-_]+)/g;
+  const verifiesRegex = /(?:\/\/|#|\/\*|\{\/\*)\s*@verifies\s+([A-Za-z0-9\-_]+)::(TASK-[A-Za-z0-9\-_]+)::(REQ-[0-9]{3,4})/g;
+  const implementsRegex = /(?:\/\/|#|\/\*|\{\/\*)\s*@implements\s+([A-Za-z0-9\-_]+)::(TASK-[A-Za-z0-9\-_]+)::(REQ-[0-9]{3,4})/g;
 
   for (const filePath of codeFiles) {
     const relCodePath = path.relative(codeRoot, filePath).replace(/\\/g, '/');
@@ -541,24 +547,28 @@ function auditCodebase(codeRoot) {
 
       let vMatch;
       while ((vMatch = verifiesRegex.exec(line)) !== null) {
-        const specId = vMatch[1];
-        const reqId = vMatch[2];
+        const rawFeature = vMatch[1];
+        const taskId = vMatch[2];
+        const reqId = vMatch[3];
+        const specId = rawFeature.startsWith('spec-') ? rawFeature : `spec-${rawFeature}`;
         const key = `${specId}::${reqId}`;
         if (!report.traceability.verifiesAnnotations[key]) {
           report.traceability.verifiesAnnotations[key] = [];
         }
-        report.traceability.verifiesAnnotations[key].push({ file: relCodePath, line: lineNum });
+        report.traceability.verifiesAnnotations[key].push({ file: relCodePath, line: lineNum, taskId, specId, reqId });
       }
 
       let iMatch;
       while ((iMatch = implementsRegex.exec(line)) !== null) {
-        const specId = iMatch[1];
-        const reqId = iMatch[2];
+        const rawFeature = iMatch[1];
+        const taskId = iMatch[2];
+        const reqId = iMatch[3];
+        const specId = rawFeature.startsWith('spec-') ? rawFeature : `spec-${rawFeature}`;
         const key = `${specId}::${reqId}`;
         if (!report.traceability.implementsAnnotations[key]) {
           report.traceability.implementsAnnotations[key] = [];
         }
-        report.traceability.implementsAnnotations[key].push({ file: relCodePath, line: lineNum });
+        report.traceability.implementsAnnotations[key].push({ file: relCodePath, line: lineNum, taskId, specId, reqId });
       }
     }
   }
@@ -578,23 +588,21 @@ function auditCodebase(codeRoot) {
 
   // Check for orphan annotations (annotating spec/req that does not exist)
   const allAnnotations = [
-    ...Object.entries(report.traceability.implementsAnnotations).map(([k, v]) => ({ key: k, locs: v, kind: 'implements' })),
-    ...Object.entries(report.traceability.verifiesAnnotations).map(([k, v]) => ({ key: k, locs: v, kind: 'verifies' })),
+    ...Object.values(report.traceability.implementsAnnotations).flat().map(v => ({ ...v, kind: 'implements' })),
+    ...Object.values(report.traceability.verifiesAnnotations).flat().map(v => ({ ...v, kind: 'verifies' })),
   ];
 
-  for (const { key, locs, kind } of allAnnotations) {
-    const [specId, reqId] = key.split('::');
-    const declaredReqs = report.traceability.declaredRequirements[specId];
-    if (!declaredReqs || !declaredReqs.includes(reqId)) {
-      for (const loc of locs) {
-        report.traceability.orphanAnnotations.push({
-          kind,
-          specId,
-          reqId,
-          file: loc.file,
-          line: loc.line,
-        });
-      }
+  for (const ann of allAnnotations) {
+    const declaredReqs = report.traceability.declaredRequirements[ann.specId];
+    if (!declaredReqs || !declaredReqs.includes(ann.reqId)) {
+      report.traceability.orphanAnnotations.push({
+        kind: ann.kind,
+        specId: ann.specId,
+        taskId: ann.taskId,
+        reqId: ann.reqId,
+        file: ann.file,
+        line: ann.line,
+      });
     }
   }
 
@@ -735,7 +743,7 @@ function printHumanReport() {
     if (report.traceability.orphanAnnotations.length > 0) {
       console.log(`\n  ${c.yellow}⚠ Orphan Annotations (Target Requirement Not Declared):${c.reset}`);
       for (const orphan of report.traceability.orphanAnnotations.slice(0, 10)) {
-        console.log(`    ${c.yellow}@${orphan.kind} ${orphan.specId}::${orphan.reqId}${c.reset} at ${orphan.file}:${orphan.line}`);
+        console.log(`    ${c.yellow}@${orphan.kind} ${orphan.specId}::${orphan.taskId}::${orphan.reqId}${c.reset} at ${orphan.file}:${orphan.line}`);
       }
       if (report.traceability.orphanAnnotations.length > 10) {
         console.log(`    ... and ${report.traceability.orphanAnnotations.length - 10} more orphan annotations`);

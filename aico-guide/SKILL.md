@@ -32,8 +32,8 @@ The primary path for building new capabilities or applications:
 2. **`/aico-deep-dive`**: Performs blast-radius analysis and dependency graph traversal in Kùzu to designate public test seams before specifying.
 3. **`/aico-spec-creation`**: Synthesizes formal EARS requirements (`REQ-###`) using the 5 canonical patterns. Records explicit In-Scope and Out-of-Scope boundaries and designated public test seams.
 4. **`/aico-planning`**: Decomposes the specification into a Directed Acyclic Graph (DAG) of vertical tracer bullets with explicit `blocked_by` dependencies and human gate tasks.
-5. **`/aico-test-scaffolding`**: Scaffolds red (failing) tests at public seams tagged with `// @verifies SPEC-ID::REQ-ID`.
-6. **`/aico-implementation`**: Writes minimal code to make tests green, tagging source symbols with `// @implements SPEC-ID::REQ-ID`.
+5. **`/aico-test-scaffolding`**: Scaffolds red (failing) tests at public seams tagged with `// @verifies ft-<feature>::TASK-###::REQ-###`.
+6. **`/aico-implementation`**: Writes minimal code to make tests green, tagging source symbols with `// @implements ft-<feature>::TASK-###::REQ-###`.
 7. **`/aico-review-loop`**: Two-axis adversarial verification (Standards smell baseline vs Spec fidelity) + Kùzu graph convergence closure.
 
 ### 2. High-Fog Greenfield On-Ramp

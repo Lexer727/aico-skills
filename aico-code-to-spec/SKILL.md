@@ -73,12 +73,12 @@ For each epic to be specified:
 ### Step 5: In-Band Trace Tagging (HITL Option)
 1. Match existing source functions and classes to the newly synthesized `REQ-###` IDs.
 2. Propose in-band annotations:
-   - On implementation symbols: `// @implements SPEC-<slug>::REQ-001`
-   - On existing tests: `// @verifies SPEC-<slug>::REQ-001`
+   - On implementation symbols: `// @implements ft-<feature>::TASK-###::REQ-###`
+   - On existing tests: `// @verifies ft-<feature>::TASK-###::REQ-###`
 3. With human approval, insert the annotations or allow AICO's AST watcher to ingest them into Kùzu:
    ```cypher
    MERGE (c:CodeSymbol {name: "validate_token"})
-   MERGE (r:Requirement {id: "SPEC-AUTH-001::REQ-001"})
+   MERGE (r:Requirement {id: "ft-<feature>::TASK-###::REQ-###"})
    MERGE (c)-[:IMPLEMENTS]->(r)
    ```
 

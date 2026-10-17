@@ -44,8 +44,8 @@ A quick-reference checklist for auditing AICO artifacts and codebase ground-trut
 ## 2. Axis 2: Codebase Ground-Truth & Seam Parity
 
 ### In-Band Traceability
-- [ ] **`@implements` Coverage**: Every active `REQ-###` has at least one source symbol tagged with `// @implements spec-ft-<slug>::REQ-###`.
-- [ ] **`@verifies` Coverage**: Every active `REQ-###` has at least one test tagged with `// @verifies spec-ft-<slug>::REQ-###`.
+- [ ] **`@implements` Coverage**: Every active `REQ-###` has at least one source symbol tagged with `// @implements ft-<feature>::TASK-###::REQ-###`.
+- [ ] **`@verifies` Coverage**: Every active `REQ-###` has at least one test tagged with `// @verifies ft-<feature>::TASK-###::REQ-###`.
 - [ ] **Zero Orphan Annotations**: No annotations reference non-existent specifications or invalid requirement IDs.
 
 ### Verification Seams Ground Truth

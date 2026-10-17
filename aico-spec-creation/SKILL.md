@@ -62,7 +62,7 @@ Load the parent brainstorm (`brain-ec-*.md` or single-feature brainstorm), deep-
 ### Step 3: Designate Test Seams
 Define explicit contract test seams:
 - Where in the codebase will this requirement be verified?
-- Tag unit and integration test functions with `@verifies spec-ft-<slug>::req-###`.
+- Tag unit and integration test functions with `// @verifies ft-<feature>::TASK-###::REQ-###`.
 
 ### Step 4: Define Negative & Boundary Cases
 Add at least one `Unwanted Behavior` pattern for:

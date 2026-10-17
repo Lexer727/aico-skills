@@ -109,12 +109,12 @@ Specifications and plans must not be aspirational fiction. Codebase verification
 1. **Rule 8: In-Band Traceability Tagging Parity**:
    - Every `REQ-###` declared in an active feature specification must be implemented by at least one production code symbol annotated with:
      ```typescript
-     // @implements spec-ft-<slug>::REQ-###
+     // @implements ft-<feature>::TASK-###::REQ-###
      ```
      (or Python `# @implements ...`, Rust `// @implements ...`).
    - Every `REQ-###` must be covered by at least one test annotated with:
      ```typescript
-     // @verifies spec-ft-<slug>::REQ-###
+     // @verifies ft-<feature>::TASK-###::REQ-###
      ```
    - **Orphan Tag Detection**: Any `@implements` or `@verifies` tag referencing a non-existent specification or requirement ID is flagged as an error.
 2. **Rule 9: Physical Seam Existence on Disk**:
