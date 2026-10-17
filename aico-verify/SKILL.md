@@ -132,11 +132,13 @@ Specifications and plans must not be aspirational fiction. Codebase verification
 
 ---
 
-## 3. Automated Verification Script
+## 3. Automated Verification CLI (`aico-cli.mjs verify`)
 
-A high-performance automated verification script is bundled directly with this skill:
+The dual-axis verification engine is accessible via the unified `aico-cli.mjs` entry point (as well as the `aico-verify/scripts/verify-artifacts.mjs` wrapper):
 
 ```bash
+node <skills-path>/scripts/aico-cli.mjs verify <specs-dir> [codebase-dir] [options]
+# Or via the legacy wrapper:
 node <skills-path>/aico-verify/scripts/verify-artifacts.mjs <specs-dir> [codebase-dir] [options]
 ```
 
@@ -148,13 +150,13 @@ node <skills-path>/aico-verify/scripts/verify-artifacts.mjs <specs-dir> [codebas
 ### Example Invocations:
 ```bash
 # Verify specs directory only (Axis 1)
-node ~/.gemini/config/plugins/aico-skills/skills/aico-verify/scripts/verify-artifacts.mjs d:/aico/aico-specs
+node ~/.gemini/config/plugins/aico-skills/scripts/aico-cli.mjs verify d:/aico/aico-specs
 
 # Full dual-axis verification (Axis 1 + Axis 2)
-node ~/.gemini/config/plugins/aico-skills/skills/aico-verify/scripts/verify-artifacts.mjs d:/aico/aico-specs d:/dev/aico
+node ~/.gemini/config/plugins/aico-skills/scripts/aico-cli.mjs verify d:/aico/aico-specs d:/aico/codebase/aico
 
 # Auto-fix safe schema versioning and broken ADR relative paths
-node ~/.gemini/config/plugins/aico-skills/skills/aico-verify/scripts/verify-artifacts.mjs d:/aico/aico-specs d:/dev/aico --fix
+node ~/.gemini/config/plugins/aico-skills/scripts/aico-cli.mjs verify d:/aico/aico-specs d:/aico/codebase/aico --fix
 ```
 
 ---

@@ -12,8 +12,8 @@ Run before drafting formal contracts to investigate existing code structure, eva
 
 ## Process
 
-### 1. Kùzu Graph Traversal
-Execute openCypher traversals in Kùzu (or AST code search in meta-mode) across 2 to 4 hops:
+### 1. Kùzu Graph Traversal via `query_lineage_graph`
+Invoke the AICO MCP tool `query_lineage_graph` (`symbol`, `hops: 1..4`) or execute openCypher traversals in Kùzu across 2 to 4 hops:
 ```cypher
 // Trace all transitive callers and dependents of the target module/symbol
 MATCH path = (target:Module {name: $module_name})<-[:IMPORTS|CALLS*1..4]-(caller)
@@ -45,29 +45,12 @@ Consult `aico-codebase-design`:
 - Enforce the rule: *the interface is the test surface*.
 - Confirm designated seams with the developer.
 
-### 4. Artifact Generation via MCP Gate
-Commit the deep-dive document via `create_sdd_artifact`:
-```yaml
-mcp_call:
-  tool_name: "create_sdd_artifact"
-  parameters:
-    artifact_type: "deep_dive"
-    domain: "<domain>"
-    slug: "<kebab-slug>"
-    derives_from_ids: ["BRAIN-..."]
-    title: "Deep-Dive: <Title>"
-    content_body: |
-      # Deep-Dive Analysis: <Title>
-      
-      ## System Boundary & Affected Modules
-      <List of affected modules and files identified via Kùzu>
-      
-      ## Dependency Walk & Blast Radius
-      <Graph findings, transitive callers, and classified pattern (Tracer vs Expand-Contract)>
-      
-      ## Designated Public Seams
-      <The exact interfaces and seams where tests will be anchored>
+### 4. Artifact Generation via `aico-cli.mjs`
+Scaffold the deep-dive document (`dive-ft-<slug>.md`) deterministically via `aico-cli.mjs`:
+```bash
+node <skills-path>/scripts/aico-cli.mjs scaffold-feature --specs-dir <specs-root> [--epic ec-<id>] --slug <slug> --title "<Title>" --with-dive
 ```
+Then populate the deep-dive body sections (`System Boundary & Affected Modules`, `Dependency Walk & Blast Radius`, and `Designated Public Seams`).
 
 ---
 

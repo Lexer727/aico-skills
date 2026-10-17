@@ -8,24 +8,24 @@ This document specifies the exact structure, triggers, execution flows, and guar
 
 AICO operates with two mirrors of the skill harness:
 
-1. **Meta-Harness (Developing AICO)**:
-   - Used *today* to build AICO's desktop platform (Tauri, Rust, React, Kùzu, LanceDB, Tree-sitter, MCP).
-   - Relies on file-based conventions and local CLI/test tooling while AICO's embedded engines are being constructed.
-2. **Product-Harness (In-App Runtime)**:
-   - Embedded into AICO for end-user projects.
-   - Enforced by AICO's deterministic **MCP Tool Gates** (`create_sdd_artifact`, `query_graph`, `search_hybrid`).
+1. **Stateless SDD File & Lifecycle CLI (`scripts/aico-cli.mjs`)**:
+   - Bundled directly in `aico-skills` for zero-build portability and self-hosting safety.
+   - Executes deterministic scaffolding (`scaffold-epic`, `scaffold-feature`, `scaffold-adr`, `upsert-glossary`), task lifecycle mutations (`task-status`, `plan-amend`), DAG frontier evaluation (`frontier`), and dual-axis verification (`verify`).
+2. **Stateful Graph & Hybrid Search MCP Engine (`crates/aico-mcp`)**:
+   - Connected to `aico-storage` (Kùzu and LanceDB).
+   - Enforces stateful graph/vector tools (`query_lineage_graph`, `search_hybrid`, `find_dangling_requirements`, `verify_task`, `extract_annotations`, `validate_ears`).
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                            7 Core SDD Skills                                │
 ├───────────────┬─────────────────────────────────────────────────────────────┤
-│ 1. Brainstorm │ Problem exploration, Socratic grilling, LanceDB retrieval   │
-│ 2. Deep-Dive  │ Kùzu graph walks, blast-radius analysis, seam selection     │
+│ 1. Brainstorm │ Problem exploration, Socratic grilling, search_hybrid       │
+│ 2. Deep-Dive  │ Kùzu query_lineage_graph walks, blast-radius, seam selection│
 │ 3. Spec       │ 5 EARS patterns, mandatory "shall", out-of-scope boundaries │
-│ 4. Plan       │ Task DAG with blocking edges, tracer bullets, frontier      │
+│ 4. Plan       │ Task DAG with blocking edges, tracer bullets, frontier CLI  │
 │ 5. Test-Scaff │ Failing contract tests at public seams with @verifies tags  │
-│ 6. Implement  │ Minimal code to pass tests with @implements tags            │
-│ 7. Review     │ Two-axis review (Standards vs Spec) + Kùzu graph convergence│
+│ 6. Implement  │ Minimal code to pass tests with @implements + task-status   │
+│ 7. Review     │ Two-axis review (Standards vs Spec) + aico-cli.mjs verify   │
 └───────────────┴─────────────────────────────────────────────────────────────┘
 ```
 
@@ -44,25 +44,24 @@ disable-model-invocation: false
 ```
 
 #### Goal
-Transform raw ideas, feature requests, or developer discussions into a coherent architectural framing document (`BRAIN-{domain}-{slug}.md`) and aligned domain vocabulary in `GLOSSARY.md`.
+Transform raw ideas, feature requests, or developer discussions into a coherent architectural framing document (`brain-ec-{id}.md` or `brain-ft-{slug}.md`) and aligned domain vocabulary in `glossary.md`.
 
 #### Process
 1. **Context Retrieval**:
-   - Query hybrid search (LanceDB / local docs) for prior brainstorms, existing ADRs, and relevant architectural principles.
+   - Query hybrid search (`search_hybrid` in `aico-mcp`) for prior brainstorms, existing ADRs, and relevant architectural principles.
 2. **Socratic Grilling Loop**:
    - Construct an internal decision tree.
    - Identify the unblocked decision frontier (questions that can be asked now without guessing future answers).
    - Present questions in rounds (maximum 3-5 high-impact questions per round), always pairing each question with a recommended option and rationale.
 3. **Glossary Alignment**:
    - Identify overloaded or ambiguous terms.
-   - Propose canonical terms and record them in `GLOSSARY.md`.
+   - Propose canonical terms and record them via `aico-cli.mjs upsert-glossary`.
 4. **Artifact Generation**:
-   - In Meta-Mode: Write to `brainstorms/{domain}/BRAIN-{seq}-{slug}.md`.
-   - In Product-Mode: Call MCP tool `create_sdd_artifact(artifact_type='brainstorm', domain=..., slug=..., derives_from_ids=[...], title=..., content_body=...)`.
+   - Scaffold via `node <skills-path>/scripts/aico-cli.mjs scaffold-epic` or `scaffold-feature --with-brain`.
 
 #### Completion Criteria
 - [ ] No unanswered high-impact questions remaining on the decision frontier.
-- [ ] All new domain terms captured in `GLOSSARY.md`.
+- [ ] All new domain terms captured in `glossary.md`.
 - [ ] Brainstorm document generated with explicit Problem Statement, Explored Approaches, and Decision Rationale.
 
 ---
@@ -82,7 +81,7 @@ Determine the exact structural impact of a proposed change, evaluate existing mo
 
 #### Process
 1. **Graph Traversal**:
-   - Query Kùzu property graph (or Tree-sitter code index in meta-mode):
+   - Query Kùzu property graph via `query_lineage_graph`:
      ```cypher
      MATCH path = (m:Module {name: $target_module})<-[:IMPORTS|CALLS*1..4]-(dependent)
      RETURN path
@@ -98,7 +97,7 @@ Determine the exact structural impact of a proposed change, evaluate existing mo
    - Identify the highest public interface where behavior can be observed without reaching inside (`codebase-design`).
    - Confirm test seams with the developer.
 4. **Artifact Generation**:
-   - Call `create_sdd_artifact(artifact_type='deep_dive', ...)`.
+   - Scaffold via `node <skills-path>/scripts/aico-cli.mjs scaffold-feature --with-dive`.
 
 #### Completion Criteria
 - [ ] Dependency path and affected callers explicitly enumerated.
@@ -140,7 +139,7 @@ Synthesize architectural decisions into formal contract specifications with immu
    - Document agreed testing seams and public interfaces.
    - Avoid transient file paths or premature code snippets.
 4. **Artifact Generation**:
-   - Invoke `create_sdd_artifact(artifact_type='spec', derives_from_ids=['BRAIN-...', 'DIVE-...'], ...)`.
+   - Scaffold via `node <skills-path>/scripts/aico-cli.mjs scaffold-feature`.
 
 #### Completion Criteria
 - [ ] 100% of functional requirements conform to EARS syntax.

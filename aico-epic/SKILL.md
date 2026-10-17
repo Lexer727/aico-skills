@@ -30,24 +30,25 @@ From /aico-start ───> /aico-epic ───> Scaffold Container ───> 
                      (Triage Match)    (epics/ec-<id>/)       (Overarching Concept)        (calls /aico-feature)
 ```
 
-### Step 1: Scope & Scaffold the Epic Container
-1. Resolve `<project>-specs/epics/ec-{short_id}/` using a concise, descriptive identifier (e.g. `ec-core`, `ec-specs`, `ec-workspace`).
-2. Create the container directory and its child `features/` directory:
-   - `<project>-specs/epics/ec-{short_id}/`
-   - `<project>-specs/epics/ec-{short_id}/features/`
+### Step 1: Scope & Scaffold the Epic Container via `aico-cli.mjs`
+1. Resolve `<project>-specs/epics/ec-{short_id}/` using a concise, descriptive identifier (e.g. `ec-core`, `ec-specs`, `ec-tooling`).
+2. Execute the deterministic CLI scaffolder to create `epics/ec-{short_id}/features/` and initialize `brain-ec-{short_id}.md` with canonical Line-1 YAML frontmatter:
+   ```bash
+   node <skills-path>/scripts/aico-cli.mjs scaffold-epic --specs-dir <project>-specs --id <short_id> --title "<Epic Title>" --derives-from "ADR-####"
+   ```
 
 ### Step 2: Overarching Concept & Shared Brainstorm
 1. Ingest problem statement, cross-cutting architectural trade-offs, and candidate alternatives gathered in `/aico-start`.
-2. Write the shared brainstorm artifact with frontmatter:
+2. Populate the body sections of the scaffolded shared brainstorm artifact:
    `<project>-specs/epics/ec-{short_id}/brain-ec-{short_id}.md`
    ```yaml
    ---
    id: brain-ec-{short_id}
    type: brainstorm
-   aico_skills_version: "{aico_skills_version}" # Read dynamically from aico-skills/plugin.json
+   aico_skills_version: "{aico_skills_version}" # Injected automatically by aico-cli.mjs
    epic: "ec-{short_id}"
    title: "Epic Title"
-   status: In Progress
+   status: "Draft"
    derives_from: ["ADR-####"]
    created_at: "YYYY-MM-DDTHH:MM:SSZ"
    ---

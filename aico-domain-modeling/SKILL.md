@@ -27,18 +27,26 @@ Replace overloaded words with precise domain terms:
 - Vague: *"The user's account"*
 - Sharp: *"The Organization profile (billing context) or the User Identity (auth context)?"*
 
-### 3. Update GLOSSARY.md Inline
+### 3. Update GLOSSARY.md Inline via `aico-cli.mjs`
 Capture new terms the moment they are resolved. Do not batch them at the end.
+- Execute the deterministic glossary upsert command:
+  ```bash
+  node <skills-path>/scripts/aico-cli.mjs upsert-glossary --specs-dir <specs-root> --term "<Term>" --definition "<Definition>" --synonyms "<Avoided Synonyms>" --example "<Example>"
+  ```
 - Use the schema specified in [`GLOSSARY-FORMAT.md`](GLOSSARY-FORMAT.md).
 - Keep `GLOSSARY.md` strictly focused on domain meaning. It must contain zero implementation details, zero framework names, and zero file paths.
 
-### 4. Record ADRs Sparingly
-Offer to create an Architecture Decision Record (ADR) under `docs/adr/` **only when all three conditions are met**:
+### 4. Record ADRs Sparingly via `aico-cli.mjs`
+Offer to create an Architecture Decision Record (ADR) under `adr/` **only when all three conditions are met**:
 1. **Hard to reverse**: The cost of changing your mind later is significant.
 2. **Surprising without context**: A future developer or agent will wonder *"Why was it done this way?"*
 3. **Real tradeoff**: There were genuine, viable alternatives, and you chose one for documented reasons.
 
-If any of the three is missing, skip the ADR. When writing an ADR, follow [`ADR-FORMAT.md`](ADR-FORMAT.md).
+If any of the three is missing, skip the ADR. When creating an ADR, scaffold the next sequential `00XX` file deterministically:
+```bash
+node <skills-path>/scripts/aico-cli.mjs scaffold-adr --specs-dir <specs-root> --slug <adr-slug> --title "<ADR Title>"
+```
+Then populate the body following [`ADR-FORMAT.md`](ADR-FORMAT.md).
 
 ---
 

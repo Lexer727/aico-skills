@@ -50,8 +50,11 @@ Every functional requirement **must strictly conform** to one of the 5 canonical
 
 ## 3. Process
 
-### Step 1: Ingest Context
-Load the parent brainstorm (`brain-ec-*.md` or single-feature brainstorm), deep-dive (`dive-ft-*.md`), and `GLOSSARY.md`. Verify that all domain terms match the canonical glossary.
+### Step 1: Ingest Context & Ensure Skeleton via `aico-cli.mjs`
+Load the parent brainstorm (`brain-ec-*.md` or single-feature brainstorm), deep-dive (`dive-ft-*.md`), and `GLOSSARY.md`. Verify that all domain terms match the canonical glossary. If the `spec-ft-*.md` file does not yet exist, scaffold it deterministically via:
+```bash
+node <skills-path>/scripts/aico-cli.mjs scaffold-feature --specs-dir <specs-root> [--epic ec-<id>] --slug <slug> --title "<Title>" --repos "<repo_id>"
+```
 
 ### Step 2: Formulate EARS Requirements
 - Translate each user story into atomic, testable requirements assigned sequential, stable identifiers (`REQ-001`, `REQ-002`, ...).
@@ -62,7 +65,7 @@ Load the parent brainstorm (`brain-ec-*.md` or single-feature brainstorm), deep-
 ### Step 3: Designate Test Seams
 Define explicit contract test seams:
 - Where in the codebase will this requirement be verified?
-- Tag unit and integration test functions with `// @verifies ft-<feature>::TASK-###::REQ-###`.
+- Tag unit and integration test functions with `// @verifies spec-ft-<feature>::TASK-###::REQ-###` (generatable via `node <skills-path>/scripts/aico-cli.mjs trace-tags --spec <spec-path>`).
 
 ### Step 4: Define Negative & Boundary Cases
 Add at least one `Unwanted Behavior` pattern for:

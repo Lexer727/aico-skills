@@ -62,63 +62,50 @@ Runtime Defect / Scope Change ───► /aico-plan-amendment
 
 ### Step 2: Select Mutation Strategy
 
-#### Strategy A: Append Remediation Tasks (Most Common)
-When an existing task missed a requirement, integration broke, or a bug was uncovered:
-1. Assign the next sequential task ID for the plan (e.g. `TASK-CORE-006-6` if tasks 1–5 exist).
-2. Clearly formulate the task:
-   ```markdown
-   - **TASK-CORE-006-6**: Tailwind CSS Integration & Layout Theme Restoration
-     - **Status**: Pending
-     - **Addresses**: `REQ-001`, `REQ-015`
-     - **Blocked by**: None (Can start immediately)
-     - **What it delivers**:
-       - Installs `@tailwindcss/vite` and `tailwindcss`.
-       - Replaces template Vite styles with Tailwind directives.
-       - Rebuilds frontend bundle and verifies utility classes render.
-     - **Verification Seam**: `frontend/tests/ShellLayout.test.tsx`
-   ```
+#### Strategy A: Append Remediation Tasks via `aico-cli.mjs plan-amend` (Most Common)
+When an existing task missed a requirement, integration broke, or a bug was uncovered, run `plan-amend` to auto-assign the next sequential `TASK-ID`, append the task block, record the entry in the single `## 3. Amendment Log`, and reopen the plan/spec/epic status to `"In Progress"`:
+```bash
+node <skills-path>/scripts/aico-cli.mjs plan-amend \
+  --plan <path-to-plan.md> \
+  --title "Tailwind CSS Integration & Layout Theme Restoration" \
+  --addresses "REQ-001,REQ-015" \
+  --seam "frontend/tests/ShellLayout.test.tsx" \
+  --delivers "Installs @tailwindcss/vite;Replaces template Vite styles;Rebuilds frontend bundle" \
+  --rationale "Restore utility styling across shell layout"
+```
 
-#### Strategy B: Rewrite an Outdated Task
+#### Strategy B: Rewrite an Outdated Task via `aico-cli.mjs`
 When an uncompleted task needs significant reformulation due to requirement changes:
-1. Update the original task:
-   ```markdown
-   - **TASK-CORE-006-2**: Legacy Bottom Panel Implementation
-     - **Status**: Rewritten
-     - **Reason**: Switched from custom grid layout to Radix DockablePanel primitives.
-     - **Rewrite Target**: `TASK-CORE-006-7`
+1. Append the replacement task via `aico-cli.mjs plan-amend` (e.g. producing `TASK-CORE-006-7`).
+2. Mark the original task `Rewritten` via `aico-cli.mjs task-status`:
+   ```bash
+   node <skills-path>/scripts/aico-cli.mjs task-status \
+     --plan <path-to-plan.md> \
+     --task TASK-CORE-006-2 \
+     --status Rewritten \
+     --reason "Switched from custom grid layout to Radix DockablePanel primitives." \
+     --rewrite-target TASK-CORE-006-7
    ```
-2. Append the replacement task (`TASK-CORE-006-7`) with `Status: Pending` or `Blocked`.
 
-#### Strategy C: Cancel a Superseded Task
+#### Strategy C: Cancel a Superseded Task via `aico-cli.mjs`
 When a pending task is no longer necessary:
-1. Update the task:
-   ```markdown
-   - **TASK-CORE-006-4**: Custom Title Bar Rendering
-     - **Status**: Skipped/Canceled
-     - **Reason**: Browser window frames provide sufficient OS controls per ADR-0005.
-   ```
+```bash
+node <skills-path>/scripts/aico-cli.mjs task-status \
+  --plan <path-to-plan.md> \
+  --task TASK-CORE-006-4 \
+  --status "Skipped/Canceled" \
+  --reason "Browser window frames provide sufficient OS controls per ADR-0005."
+```
 
 ### Step 3: Recompute DAG Blocking Edges & Dynamic Frontier
-- Update all `Blocked by` and downstream dependencies.
-- Ensure no orphaned tasks or circular loops.
-- Identify the updated unblocked `Pending` tasks dynamically (do NOT write a static `## 3. Active Frontier` section to the plan).
-
-### Step 4: Reopen Plan & Epic Status
-- In the plan's YAML frontmatter:
-  ```yaml
-  ---
-  id: plan-ft-core-webui-shell
-  type: plan
-  aico_skills_version: "{aico_skills_version}" # Read dynamically from aico-skills/plugin.json
-  epic: "ec-core"
-  title: "WebUI Application Shell, Navigation & Dockable Layout"
-  status: "In Progress"
-  ---
+- Verify the DAG and inspect unblocked `Pending` tasks via:
+  ```bash
+  node <skills-path>/scripts/aico-cli.mjs frontier --plan <path-to-plan.md>
   ```
-- If parent Epic was marked completed, reopen its `status` in its frontmatter to `In Progress`.
-- Record the amendment in the single **Amendment Log** (`## 3. Amendment Log`):
-  - **Single Header Rule**: If `## 3. Amendment Log` (or `## Amendment Log`) already exists, append new timestamped bullet points directly into the existing section. **NEVER create duplicate `## Amendment Log` headers**.
-  - **No Static Frontier Section**: Do not generate a `## Active Frontier` section.
+- Do NOT write a static `## 3. Active Frontier` section to the plan.
+
+### Step 4: Automatic Plan & Epic Status Reopening
+- `aico-cli.mjs plan-amend` automatically transitions the plan, sibling spec, and parent epic brainstorm YAML frontmatter `status` to `"In Progress"`, and appends a timestamped entry to the single consolidated `## 3. Amendment Log` section without creating duplicate headers.
 
 ### Step 5: Sync with Kùzu Property Graph
 Update the task graph in Kùzu:

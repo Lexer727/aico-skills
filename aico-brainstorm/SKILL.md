@@ -12,11 +12,11 @@ The first step of the feature flow. Transform raw feature ideas, rough user note
 
 ## Process
 
-### 1. Hybrid Context Retrieval
-Before asking questions, retrieve prior context from **LanceDB** (or local docs in meta-mode):
-- Search for related existing ADRs in `docs/adr/`.
-- Search for related brainstorms in `brainstorms/` and existing specifications in `specs/`.
-- Inspect `GLOSSARY.md` for relevant terminology.
+### 1. Hybrid Context Retrieval via `search_hybrid`
+Before asking questions, retrieve prior context using the AICO MCP tool `search_hybrid` (`query`, `top_k`) across **LanceDB** and **Kùzu** (or local docs in meta-mode):
+- Search for related existing ADRs in `adr/`.
+- Search for related brainstorms (`brain-ec-*.md`, `brain-ft-*.md`) and existing specifications (`spec-ft-*.md`).
+- Inspect `glossary.md` for relevant terminology.
 
 ### 2. Socratic Grilling Loop
 Map the problem space as a **design tree**. Identify the **decision frontier**: the questions that can be asked *now* without guessing future answers.
@@ -35,38 +35,19 @@ Present questions in **rounds** (maximum 3–4 high-impact questions per round).
 ### 3. Inline Domain Modeling
 Call `aico-domain-modeling` during the conversation:
 - Challenge vague or overloaded words immediately.
-- Update `GLOSSARY.md` inline as canonical terms crystallize.
-- If a major irreversible architectural trade-off is settled, record an ADR in `docs/adr/`.
+- Update `glossary.md` inline as canonical terms crystallize (`aico-cli.mjs upsert-glossary`).
+- If a major irreversible architectural trade-off is settled, record an ADR in `adr/` (`aico-cli.mjs scaffold-adr`).
 
-### 4. Artifact Generation via MCP Gate
-Once the decision frontier is settled, format the output document and commit it via the AICO MCP tool gate:
+### 4. Artifact Generation via `aico-cli.mjs`
+Once the decision frontier is settled, scaffold the brainstorm document (`brain-ec-<id>.md` or `brain-ft-<slug>.md`) via `aico-cli.mjs`:
+```bash
+# For an Epic brainstorm:
+node <skills-path>/scripts/aico-cli.mjs scaffold-epic --specs-dir <specs-root> --id <short_id> --title "<Descriptive Title>"
 
-```yaml
-mcp_call:
-  tool_name: "create_sdd_artifact"
-  parameters:
-    artifact_type: "brainstorm"
-    domain: "<domain>"
-    slug: "<kebab-slug>"
-    derives_from_ids: []
-    title: "<Descriptive Title>"
-    content_body: |
-      # Brainstorm: <Title>
-      
-      ## Problem Statement
-      <From the user's perspective>
-      
-      ## Explored Approaches & Trade-offs
-      <Alternatives considered and rejected>
-      
-      ## Selected Architecture & Strategy
-      <The consensus direction>
-      
-      ## Key Decisions
-      <Numbered summary of settled decisions>
+# Or for a Feature brainstorm:
+node <skills-path>/scripts/aico-cli.mjs scaffold-feature --specs-dir <specs-root> --slug <slug> --title "<Descriptive Title>" --with-brain
 ```
-
-*(In meta-mode while bootstrapping AICO, write the file directly to `brainstorms/{domain}/BRAIN-{seq}-{slug}.md` with YAML frontmatter `id`, `type: brainstorm`, `title`).*
+Then populate the brainstorm body sections (`Executive Summary & Problem Statement`, `Explored Approaches & Trade-offs`, and `Core Enhancements & Decisions`).
 
 ---
 

@@ -57,28 +57,28 @@ MERGE (c)-[:IMPLEMENTS]->(r)
 ## 3. Process
 
 1. **Pick the Active Red Test**: Focus strictly on the test file produced by `/aico-test-scaffolding`.
-2. **Transition Plan & Task to In Progress**:
-   - Ensure `PLAN-*.md` frontmatter has `status: "In Progress"`.
-   - Update current task in `PLAN-*.md` to `- **Status**: In Progress`.
+2. **Transition Task & Plan to In Progress via `aico-cli.mjs`**:
+   ```bash
+   node <skills-path>/scripts/aico-cli.mjs task-status --plan <path-to-plan.md> --task <TASK-ID> --status "In Progress"
+   ```
+   *(Automatically sets `plan-ft-*.md` and `spec-ft-*.md` frontmatter to `status: "In Progress"`).*
 3. **Write Minimal Code**: Implement the logic behind the designated seam.
-4. **Attach `@implements` Tags**: Annotate the relevant public symbols.
+4. **Attach `@implements` Tags**: Generate canonical tags via `node <skills-path>/scripts/aico-cli.mjs trace-tags --spec <path-to-spec.md> --task <TASK-ID>` and annotate the relevant public symbols.
 5. **Execute Verification**:
    - Run the local test runner until the suite turns **GREEN**.
    - Run local linters and typecheckers.
-6. **Update Task & Advance Frontier**:
-   - In `PLAN-*.md`, set current task to `- **Status**: Done`.
-   - If a task is replaced or canceled due to architectural change, set `- **Status**: Rewritten` or `- **Status**: Skipped/Canceled` with mandatory `- **Reason**: ...` and `- **Rewrite Target**: ...`.
-   - Update Kùzu task state (`SET t.status = 'completed'`).
-   - Query Kùzu for newly unblocked tasks:
-     ```cypher
-     MATCH (t:Task)
-     WHERE t.status IN ["pending", "ready"] 
-       AND NOT EXISTS { MATCH (b:Task)-[:BLOCKS]->(t) WHERE b.status <> "completed" }
-     RETURN t
+6. **Update Task & Advance Frontier via `aico-cli.mjs`**:
+   - Transition the task to `Done` (which runs the `TaskCompletionGate`, automatically unblocks downstream `Blocked` tasks, and automatically rolls up `status: "Completed"` to `plan-ft-*.md`, `spec-ft-*.md`, and parent `brain-ec-*.md` when all tasks finish):
+     ```bash
+     node <skills-path>/scripts/aico-cli.mjs task-status --plan <path-to-plan.md> --task <TASK-ID> --status Done --code-dir <codebase-dir>
+     ```
+   - Query the updated active frontier:
+     ```bash
+     node <skills-path>/scripts/aico-cli.mjs frontier --plan <path-to-plan.md>
      ```
 7. **Next Step**:
    - If tasks remain on the frontier: Repeat with `/aico-test-scaffolding`.
-   - If all tasks are completed: Set `status: "Completed"` in frontmatter of `PLAN-*.md` and `SPEC-*.md`, then advance to **`/aico-review-loop`**.
+   - If all tasks are completed: Advance to **`/aico-review-loop`** and **`/aico-verify`**.
 
 ---
 

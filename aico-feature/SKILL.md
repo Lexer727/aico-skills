@@ -69,16 +69,24 @@ When invoked, `aico-feature` accepts:
 
 ### Phase 1: Scaffolding & Planning
 
-#### Step 1: Scaffold Feature Container
-Create target directory:
-- Standalone: `<specs-root>/features/ft-<feature_slug>/`
-- Epic Child: `<specs-root>/epics/ec-<short_id>/features/ft-<feature_slug>/`
+#### Step 1: Scaffold Feature Container via `aico-cli.mjs`
+Run the deterministic feature scaffolder to create the target directory (`features/ft-<feature_slug>/` or `epics/ec-<short_id>/features/ft-<short_id>-<feature_slug>/`), compute the next `order` integer, validate `repositories` against `.aico-project.json`, and generate skeleton `spec-ft-*.md` and `plan-ft-*.md` files:
+```bash
+node <skills-path>/scripts/aico-cli.mjs scaffold-feature \
+  --specs-dir <specs-root> \
+  [--epic ec-<short_id>] \
+  --slug <feature_slug> \
+  --title "<Feature Title>" \
+  --repos "<repo_id>" \
+  [--derives-from "brain-ec-<short_id>,ADR-####"] \
+  [--with-dive]
+```
 
 #### Step 2: System Boundary & Blast Radius Analysis
 Invoke **`/aico-deep-dive`**:
-- Identify touched crates, modules, and public exports.
+- Identify touched crates, modules, and public exports (using MCP tool `query_lineage_graph` when available).
 - Designate primary and secondary test seams.
-- (Optional) Save `dive-ft-<feature_slug>.md` if non-trivial architectural boundaries exist.
+- (Optional) Populate `dive-ft-<feature_slug>.md` if non-trivial architectural boundaries exist.
 
 #### Step 3: Draft Formal EARS Specification
 Invoke **`/aico-spec-creation`**:
