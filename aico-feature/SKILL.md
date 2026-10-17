@@ -26,7 +26,7 @@ disable-model-invocation: false
 4. **Universal Line-1 YAML Frontmatter**: Must include:
    - `id`: `spec-ft-<feature_slug>` (or `plan-ft-<feature_slug>`)
    - `type`: `spec` | `plan`
-   - `aico_skills_version`: `"{aico_skills_version}"` (read dynamically from the `aico-skills/VERSION` file)
+   - `aico_skills_version`: `"{aico_skills_version}"` (read dynamically from the `aico-skills/plugin.json` file)
    - `epic`: `"ec-<short_id>"` (if child feature) or `null` (if standalone)
    - `order`: `<integer>` (governs visual sort sequence)
    - `title`: Human-readable capability title
@@ -87,7 +87,7 @@ Invoke **`/aico-spec-creation`**:
   ---
   id: spec-ft-<feature_slug>
   type: spec
-  aico_skills_version: "{aico_skills_version}" # Read dynamically from aico-skills/VERSION
+  aico_skills_version: "{aico_skills_version}" # Read dynamically from aico-skills/plugin.json
   epic: <"ec-id" | null>
   order: 1
   title: "<Feature Title>"
@@ -107,7 +107,7 @@ Invoke **`/aico-planning`**:
   ---
   id: plan-ft-<feature_slug>
   type: plan
-  aico_skills_version: "{aico_skills_version}" # Read dynamically from aico-skills/VERSION
+  aico_skills_version: "{aico_skills_version}" # Read dynamically from aico-skills/plugin.json
   epic: <"ec-id" | null>
   order: 1
   title: "<Feature Title> Implementation Plan"

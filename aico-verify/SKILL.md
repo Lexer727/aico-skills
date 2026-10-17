@@ -7,7 +7,7 @@ disable-model-invocation: false
 # AICO Verify: Dual-Axis Artifact & Ground-Truth Parity Audit
 
 The verification engine and quality gate for Spec-Driven Development (SDD). `aico-verify` provides adversarial, bidirectional verification that answers two foundational questions:
-1. **Axis 1 (Blueprint & Template Conformance)**: Do generated epics, features, specs, plans, and ADRs strictly conform to canonical skill templates and the schema governed by VERSION?
+1. **Axis 1 (Blueprint & Template Conformance)**: Do generated epics, features, specs, plans, and ADRs strictly conform to canonical skill templates and the schema governed by plugin.json?
 2. **Axis 2 (Codebase Parity & Seam Ground Truth)**: Does the specification accurately reflect what is implemented in the codebase, and do declared verification seams physically exist, pass tests, and satisfy in-band contracts without dark code or phantom deliverables?
 
 Use `/aico-verify` before merging, before closing milestones, after running migrations, or when auditing brownfield/greenfield SDD repositories.
@@ -50,7 +50,7 @@ Running both axes simultaneously guarantees that documentation and codebase grou
 
 ### Axis 1: Artifact Blueprint & Template Conformance
 
-Every artifact in the specs repository (`epics/`, `features/`, `adr/`, `specs/`, `plans/`) must strictly comply with the canonical rules governed by `VERSION` and established in `ADR-0010`:
+Every artifact in the specs repository (`epics/`, `features/`, `adr/`, `specs/`, `plans/`) must strictly comply with the canonical rules governed by `plugin.json` and established in `ADR-0010`:
 
 1. **Rule 1: Line-1 YAML Frontmatter**:
    - The document MUST begin on Line 1 with `---` (zero preceding blank lines, whitespace, or comments).
@@ -59,7 +59,7 @@ Every artifact in the specs repository (`epics/`, `features/`, `adr/`, `specs/`,
      ---
      id: <artifact-id>               # Lowercase canonical ID (e.g., spec-ft-fast-trace, plan-ft-fast-trace, ec-core)
      type: <type>                    # spec | plan | brainstorm | deep_dive | adr
-     aico_skills_version: "{aico_skills_version}" # Read dynamically from aico-skills/VERSION (legacy aico_version accepted)
+     aico_skills_version: "{aico_skills_version}" # Read dynamically from aico-skills/plugin.json (legacy aico_version accepted)
      epic: <"ec-<id>" | null>        # Enclosing epic container or null
      order: <integer>         # Non-negative sequence integer (required for specs, plans, features)
      title: "<Document Title>"
@@ -142,7 +142,7 @@ node <skills-path>/aico-verify/scripts/verify-artifacts.mjs <specs-dir> [codebas
 
 ### Options:
 - `--verbose`: Displays detailed unverified requirement IDs and trace mappings.
-- `--fix`: Automatically repairs safe blueprint issues (e.g. normalizing `aico_version` to `aico_skills_version` matching `VERSION`, resolving relative ADR linking depths).
+- `--fix`: Automatically repairs safe blueprint issues (e.g. normalizing `aico_version` to `aico_skills_version` matching `plugin.json`, resolving relative ADR linking depths).
 - `--json`: Emits complete machine-readable verification JSON for CI/CD or agent ingestion.
 
 ### Example Invocations:
@@ -246,7 +246,7 @@ Depending on the audit verdict, route directly to the appropriate specialized sk
 
 ## Completion Criteria
 - [ ] Both Axis 1 (Blueprint Conformance) and Axis 2 (Ground-Truth Parity) audited.
-- [ ] Frontmatter on Line 1, canonical schema matching `VERSION`, relative links, and dynamic frontier verified.
+- [ ] Frontmatter on Line 1, canonical schema matching `plugin.json`, relative links, and dynamic frontier verified.
 - [ ] All declared test seams checked against actual disk contents.
 - [ ] In-band `@implements` and `@verifies` annotations cross-referenced against declared requirements.
 - [ ] Structured Verification Report emitted with clear PASS or ACTION REQUIRED verdict and actionable next steps.

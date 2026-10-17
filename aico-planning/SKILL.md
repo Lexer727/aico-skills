@@ -34,7 +34,7 @@ Break the work down using tracer-bullet vertical slices:
 1. **Mandatory Line-1 YAML Frontmatter**:
    - `id`: `plan-ft-{feature_slug}` (e.g. `plan-ft-core-discovery`, `plan-ft-fast-trace`).
    - `type: plan`
-   - `aico_skills_version`: `"{aico_skills_version}"` (read dynamically from the `aico-skills/VERSION` file)
+   - `aico_skills_version`: `"{aico_skills_version}"` (read dynamically from the `aico-skills/plugin.json` file)
    - `epic`: `"ec-{short_id}"` (or `null` if standalone).
    - `order`: `<integer>` (governs visual sort sequence without altering directory names).
    - `title`: Human-readable capability title.

@@ -1,12 +1,12 @@
 ---
 name: aico-spec-migration
-description: "Audit, normalize, and upgrade existing AICO repositories to canonical blueprint standards (governed by VERSION). Enforces ec- epic naming, ft- feature naming, frontmatter order attributes, relative links, and vertical tracer-bullet DAG task execution."
+description: "Audit, normalize, and upgrade existing AICO repositories to canonical blueprint standards (governed by plugin.json). Enforces ec- epic naming, ft- feature naming, frontmatter order attributes, relative links, and vertical tracer-bullet DAG task execution."
 disable-model-invocation: false
 ---
 
 # AICO Spec Migration: Repository & Artifact Modernization
 
-Upgrade legacy AICO specifications, plans, brainstorms, and architecture decision records (ADRs) to the canonical **Blueprint Standard** (governed by `VERSION`) established in `ADR-0010`.
+Upgrade legacy AICO specifications, plans, brainstorms, and architecture decision records (ADRs) to the canonical **Blueprint Standard** (governed by `plugin.json`) established in `ADR-0010`.
 
 Use `/aico-spec-migration` when upgrading a specs repository or auditing an existing codebase for canonical AICO specification compliance.
 
@@ -22,7 +22,7 @@ Every artifact file must start with a valid YAML frontmatter block on line 1:
 ---
 id: <artifact-id>
 type: <spec|plan|brainstorm|deep_dive|adr>
-aico_skills_version: "{aico_skills_version}" # Read dynamically from aico-skills/VERSION
+aico_skills_version: "{aico_skills_version}" # Read dynamically from aico-skills/plugin.json
 epic: "ec-<short_id>" # or null for standalone features / system ADRs
 order: 1              # Integer sequence for UI and roadmap sorting
 title: "<Title>"
@@ -82,7 +82,7 @@ Implementation plan documents must NEVER contain a static `## Active Frontier` s
 4. Rename files: `spec-ft-<name>.md`, `plan-ft-<name>.md`, `brain-ft-<name>.md`.
 
 ### Phase 2: Frontmatter Ingestion & Normalization
-1. Insert line-1 YAML frontmatter with `id`, `type`, `aico_skills_version: "{aico_skills_version}"` (read dynamically from `aico-skills/VERSION`), `epic`, `order`, `title`, `status`, `derives_from`, `created_at`.
+1. Insert line-1 YAML frontmatter with `id`, `type`, `aico_skills_version: "{aico_skills_version}"` (read dynamically from `aico-skills/plugin.json`), `epic`, `order`, `title`, `status`, `derives_from`, `created_at`.
 2. Remove redundant metadata blocks from markdown bodies.
 
 ### Phase 3: Path & Relative Link Audit

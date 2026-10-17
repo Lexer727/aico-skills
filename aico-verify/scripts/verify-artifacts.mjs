@@ -28,9 +28,14 @@ if (codeDir) {
   codeDir = path.resolve(codeDir);
 }
 
-// Discover skills harness version from VERSION file in skills repo root
+// Discover skills harness version from plugin.json (with fallback to legacy VERSION)
 function getSkillsHarnessVersion() {
   const possiblePaths = [
+    path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), '../../plugin.json'),
+    path.resolve(process.env.USERPROFILE || '', '.gemini/config/plugins/aico-skills/plugin.json'),
+    path.resolve(process.env.USERPROFILE || '', '.gemini/config/plugins/aico-skills/skills/plugin.json'),
+    'd:/aico/codebase/aico-skills/plugin.json',
+    path.resolve(process.cwd(), '.agents/skills/plugin.json'),
     path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), '../../VERSION'),
     path.resolve(process.env.USERPROFILE || '', '.gemini/config/plugins/aico-skills/skills/VERSION'),
     'd:/aico/codebase/aico-skills/VERSION',
@@ -38,8 +43,13 @@ function getSkillsHarnessVersion() {
   for (const p of possiblePaths) {
     if (fs.existsSync(p)) {
       try {
-        const v = fs.readFileSync(p, 'utf8').trim();
-        if (v) return v;
+        if (p.endsWith('.json')) {
+          const manifest = JSON.parse(fs.readFileSync(p, 'utf8'));
+          if (manifest.version) return manifest.version.trim();
+        } else {
+          const v = fs.readFileSync(p, 'utf8').trim();
+          if (v) return v;
+        }
       } catch {}
     }
   }

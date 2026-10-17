@@ -1,7 +1,7 @@
 ---
 id: spec-ft-{feature_slug}
 type: spec
-aico_skills_version: "{aico_skills_version}" # Read dynamically from aico-skills/VERSION
+aico_skills_version: "{aico_skills_version}" # Read dynamically from aico-skills/plugin.json
 epic: "ec-{short_id}" # or null if standalone feature
 order: 1
 title: "{Title}"
