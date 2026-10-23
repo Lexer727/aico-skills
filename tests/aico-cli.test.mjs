@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -555,5 +555,140 @@ test('test_skills_documentation_references_cli', () => {
       content.includes(expectedToken),
       `Expected ${skillName}/SKILL.md to reference "${expectedToken}"`
     );
+  }
+});
+
+// @verifies spec-ft-specs-parallel-subagent-execution::TASK-SPECS-007-1::REQ-001
+// @verifies spec-ft-specs-parallel-subagent-execution::TASK-SPECS-007-1::REQ-005
+test('test_concurrent_task_status_locking_and_stale_lock_eviction', async () => {
+  const { tmpRoot, specsDir } = createTempSpecsWorkspace();
+  try {
+    const feat = JSON.parse(
+      runCli([
+        'scaffold-feature',
+        '--specs-dir',
+        specsDir,
+        '--slug',
+        'lock-test',
+        '--title',
+        'Lock Test Feature',
+        '--repos',
+        'aico',
+        '--json',
+      ])
+    );
+
+    const planContent = [
+      '---',
+      'id: plan-ft-lock-test',
+      'type: plan',
+      'aico_skills_version: "0.1.2"',
+      'epic: null',
+      'order: 1',
+      'title: "Lock Test Plan"',
+      'status: "Draft"',
+      'repositories: ["aico"]',
+      'derives_from: ["spec-ft-lock-test"]',
+      'created_at: "2026-10-23T20:00:00Z"',
+      '---',
+      '',
+      '# Implementation Plan: Lock Test Feature',
+      '',
+      '## 1. Technical Architecture & Decisions',
+      '- Concurrency lock verification.',
+      '',
+      '## 2. Task Graph (DAG)',
+      '',
+      '### Phase 1: Parallel Tasks',
+      '',
+      '- **TASK-LOCK-001**: Task 1',
+      '  - **Status**: Pending',
+      '  - **Addresses**: `REQ-001`',
+      '  - **Blocked by**: None',
+      '  - **What it delivers**:',
+      '    - Part 1',
+      '  - **Verification Seam**: `tests/lock_test.rs::test_1`',
+      '',
+      '- **TASK-LOCK-002**: Task 2',
+      '  - **Status**: Pending',
+      '  - **Addresses**: `REQ-001`',
+      '  - **Blocked by**: None',
+      '  - **What it delivers**:',
+      '    - Part 2',
+      '  - **Verification Seam**: `tests/lock_test.rs::test_2`',
+      '',
+      '- **TASK-LOCK-003**: Task 3',
+      '  - **Status**: Pending',
+      '  - **Addresses**: `REQ-001`',
+      '  - **Blocked by**: None',
+      '  - **What it delivers**:',
+      '    - Part 3',
+      '  - **Verification Seam**: `tests/lock_test.rs::test_3`',
+      '',
+      '- **TASK-LOCK-004**: Task 4',
+      '  - **Status**: Pending',
+      '  - **Addresses**: `REQ-001`',
+      '  - **Blocked by**: None',
+      '  - **What it delivers**:',
+      '    - Part 4',
+      '  - **Verification Seam**: `tests/lock_test.rs::test_4`',
+      '',
+    ].join('\n');
+    fs.writeFileSync(feat.planPath, planContent, 'utf8');
+
+    // Test 1 (REQ-005): Stale lockfile (>10s old) is evicted automatically
+    const lockPath = `${path.resolve(feat.planPath)}.lock`;
+    fs.writeFileSync(lockPath, JSON.stringify({ pid: 999999, acquiredAt: Date.now() - 15000 }), 'utf8');
+    const pastTimeSec = (Date.now() - 15000) / 1000;
+    fs.utimesSync(lockPath, pastTimeSec, pastTimeSec);
+
+    runCli(['task-status', '--plan', feat.planPath, '--task', 'TASK-LOCK-001', '--status', 'In Progress']);
+    assert.ok(!fs.existsSync(lockPath), 'Lockfile should be cleaned up after stale lock eviction and completion');
+    assert.match(
+      fs.readFileSync(feat.planPath, 'utf8'),
+      /- \*\*TASK-LOCK-001\*\*:[^\n]*\n\s+- \*\*Status\*\*: In Progress/
+    );
+
+    // Test 2 (REQ-001): 4 concurrent child processes updating TASK-LOCK-001 .. TASK-LOCK-004 to Done
+    const taskIds = ['TASK-LOCK-001', 'TASK-LOCK-002', 'TASK-LOCK-003', 'TASK-LOCK-004'];
+    const exitCodes = await Promise.all(
+      taskIds.map(
+        taskId =>
+          new Promise((resolve, reject) => {
+            const child = spawn(
+              process.execPath,
+              [CLI_PATH, 'task-status', '--plan', feat.planPath, '--task', taskId, '--status', 'Done'],
+              { stdio: 'pipe' }
+            );
+            let stderr = '';
+            child.stderr.on('data', chunk => {
+              stderr += chunk.toString();
+            });
+            child.on('error', reject);
+            child.on('close', code => {
+              if (code !== 0) {
+                reject(new Error(`Child for ${taskId} exited with code ${code}: ${stderr}`));
+              } else {
+                resolve(code);
+              }
+            });
+          })
+      )
+    );
+
+    assert.deepEqual(exitCodes, [0, 0, 0, 0]);
+    assert.ok(!fs.existsSync(lockPath), 'No leftover .lock file should remain after concurrent updates');
+
+    const finalPlan = fs.readFileSync(feat.planPath, 'utf8');
+    for (const taskId of taskIds) {
+      assert.match(
+        finalPlan,
+        new RegExp(`- \\*\\*${taskId}\\*\\*:[^\\n]*\\n\\s+- \\*\\*Status\\*\\*: Done`),
+        `Expected ${taskId} to be Done without lost updates`
+      );
+    }
+    assert.ok(finalPlan.includes('status: "Completed"'));
+  } finally {
+    fs.rmSync(tmpRoot, { recursive: true, force: true });
   }
 });

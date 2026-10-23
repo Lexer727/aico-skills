@@ -81,7 +81,7 @@ MERGE (s)-[:DERIVED_FROM]->(b)
 > [!IMPORTANT]
 > **Strict SDD Phase Boundary**: The framing and planning of an Epic concludes once `brain-ec-*.md` and all child `spec-ft-*.md` and `plan-ft-*.md` artifacts are created and verified.
 > 
-> - **MANDATORY STOP**: The agent MUST STOP execution here. Present the scaffolded epic summary, child feature specifications, and task DAG frontiers to the developer.
+> - **MANDATORY STOP**: The agent MUST STOP execution here. Output `[AICO GATE: Waiting for Confirmation]` to clearly signal the review gate to the developer and terminal monitors. Present the scaffolded epic summary, child feature specifications, and task DAG frontiers to the developer.
 > - **DO NOT proceed to implementation** (`/aico-test-scaffolding` or `/aico-implementation`) without explicit user review and instruction to begin execution.
 > - Never bundle scaffolding and implementation into a single turn or confirmation question.
 
@@ -95,6 +95,59 @@ Only entered after the developer approves the plans and explicitly commands exec
 
 ---
 
+## 3. Parallel Subagent Execution & Per-Task Model Routing (`invoke_subagent`)
+
+In multi-feature epics, child features (`ft-*`) and their plan tasks frequently have independent, disjoint deliverables that can be developed concurrently:
+
+### Ready Frontier Inspection across Epics
+Inspect unblocked child features and active plan frontiers across the epic:
+```bash
+node <skills-path>/scripts/aico-cli.mjs frontier --specs-dir <specs-root> --epic ec-<id> --json
+```
+When two or more child features or tasks are unblocked, parallel execution can be coordinated.
+
+### Seam Disjointness Check (REQ-004)
+Before launching parallel child feature subagents, verify file and seam disjointness:
+- **Disjoint Child Features**: Child features target different repositories, different directories, or completely independent modules/seams. These can proceed in parallel.
+- **Overlapping Seams**: If two unblocked features touch shared crates, shared schemas, or common integration seams, the epic orchestrator **MUST serialize** their execution.
+
+### Per-Task / Per-Feature Model Selection & Role Title Formatting (REQ-003, REQ-006)
+Prompt the developer before launching parallel subagents:
+- **Default Model (`Model: "flash"`)**: If no custom model is specified, subagents default to `Model: "flash"` (the top normal Gemini model, currently **Gemini 3.8 Flash**). Subagent `Role` titles default to `(3.8 Flash High)` (e.g. `Role: "Child Feature Lead (3.8 Flash High)"`). Optional thinking effort levels for 3.8 Flash include `(3.8 Flash Low)`, `(3.8 Flash Medium)`, and `(3.8 Flash High)`.
+- **High-Complexity Override (`Model: "inherit"` or `Model: "pro"`)**: For complex child features (e.g. core graph storage, query planners, synchronization primitives), pass `Model: "inherit"` (inheriting the parent session's frontier model, e.g., **Gemini 4 Argon High**) or `Model: "pro"`. The subagent `Role` title MUST explicitly reflect this: e.g. `Role: "Child Feature Lead (4 Argon High)"`.
+- **Explicit Role Tag Format**: Every subagent dispatched via `invoke_subagent` MUST append the exact `<Version> <Model> <Effort>` tag to its `Role` parameter:
+  - Default: `<Role Title> (3.8 Flash High)`
+  - Effort variants: `<Role Title> (3.8 Flash Low)`, `<Role Title> (3.8 Flash Medium)`
+  - Complex override: `<Role Title> (4 Argon High)`
+  - Future models (e.g., `4 Flash High`): `<Role Title> (4 Flash High)`
+
+### Subagent Dispatch Protocol (REQ-002, REQ-003, REQ-006)
+Dispatch concurrent child feature subagents via `invoke_subagent`:
+
+**Default Execution (Gemini 3.8 Flash High)**:
+```json
+{
+  "TypeName": "self",
+  "Role": "Child Feature Lead (3.8 Flash High)",
+  "Model": "flash",
+  "Prompt": "Execute child feature ft-<slug> from epic ec-<id>. Strictly confine changes to designated repos and seams. Update status via aico-cli.mjs task-status."
+}
+```
+
+**Complex Architecture Override (Gemini 4 Argon High)**:
+```json
+{
+  "TypeName": "self",
+  "Role": "Child Feature Lead (4 Argon High)",
+  "Model": "inherit",
+  "Prompt": "Execute child feature ft-<slug> from epic ec-<id>. Strictly confine changes to designated repos and seams. Update status via aico-cli.mjs task-status."
+}
+```
+- Subagents operate on their isolated feature seam and update plan tasks via `aico-cli.mjs task-status` (backed by atomic .lock file synchronization).
+- The parent epic agent monitors subagent progress, verifies cross-feature contracts, and handles final convergence.
+
+---
+
 ## Completion Criteria (Framing & Planning Phase)
 - [ ] Epic directory created under `<project>-specs/epics/ec-{short_id}/features/`.
 - [ ] Overarching brainstorm saved as `brain-ec-{short_id}.md`.
@@ -103,4 +156,4 @@ Only entered after the developer approves the plans and explicitly commands exec
 - [ ] All child specs and plans declare `order: <number>`, `aico_skills_version` (matching `aico-skills/plugin.json`), and `epic: "ec-{short_id}"`.
 - [ ] Child feature tasks organized in a vertical tracer-bullet DAG with explicit dependencies.
 - [ ] Epic visible in the AICO WebUI Epic Hub.
-- [ ] **Agent halted at the Human Review Gate and requested user approval before writing any code.**
+- [ ] **Agent output `[AICO GATE: Waiting for Confirmation]` and halted at the Human Review Gate and requested user approval before writing any code.**

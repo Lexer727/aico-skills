@@ -77,6 +77,12 @@ Add at least one `Unwanted Behavior` pattern for:
 - Document `## In-Scope`: Explicit list of included capabilities and architectural features.
 - Document `## Out-of-Scope`: Explicit list of excluded items, non-goals, and deferred features (always hyphenated: `## Out-of-Scope`).
 
+### Step 6: Specification Review Gate (MANDATORY STOP)
+Once `spec-ft-*.md` is drafted and verified, the agent must halt for user review and approval (Phase 2 Spec Sign-Off):
+- **Output `[AICO GATE: Waiting for Confirmation]`** to clearly signal the review gate to the developer and terminal monitors.
+- Present the EARS functional requirements, public test seams, and scope boundaries.
+- **DO NOT proceed to implementation** without explicit developer sign-off.
+
 ---
 
 ## 4. Canonical Specification Document Structure
@@ -162,3 +168,4 @@ None. Ratified in [<ADR-####>](<relative-path-to-adr>).
 - [ ] Every requirement follows strict EARS grammar with a single "shall".
 - [ ] Negative paths and edge cases addressed.
 - [ ] Public test seams designated.
+- [ ] Emitted `[AICO GATE: Waiting for Confirmation]` and halted for explicit developer sign-off before proceeding to implementation.

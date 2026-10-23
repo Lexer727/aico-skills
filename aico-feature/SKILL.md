@@ -130,6 +130,7 @@ Invoke **`/aico-planning`**:
 #### Step 5: Human Review & Approval Gate (MANDATORY STOP)
 > [!IMPORTANT]
 > **Phase 1 Concludes Here**: Once `spec-ft-*.md` and `plan-ft-*.md` are generated and verified, the agent **MUST STOP**.
+> - Output `[AICO GATE: Waiting for Confirmation]` to clearly signal the review gate to the developer and terminal monitors.
 > - Present the EARS requirements, designated test seams, and DAG task plan to the developer.
 > - **DO NOT start Phase 2 (Test Scaffolding or Implementation)** without explicit developer confirmation to begin.
 > - Never assume approval or bundle planning and code changes into a single turn.
@@ -146,10 +147,64 @@ Triggered ONLY after the developer explicitly approves the plan:
 
 ---
 
+## 4. Parallel Subagent Execution & Per-Task Model Routing (`invoke_subagent`)
+
+When executing tasks along the feature plan DAG during Phase 2 (Delivery Execution):
+
+### Ready Frontier Inspection
+Evaluate the active frontier dynamically via `aico-cli.mjs`:
+```bash
+node <skills-path>/scripts/aico-cli.mjs frontier --plan <path-to-plan.md> --json
+```
+If two or more tasks reside on `ready_frontier` simultaneously after Phase 1 approval, the feature workflow supports concurrent execution via parallel subagents.
+
+### Seam Disjointness Check (REQ-004)
+Inspect candidate tasks for file and seam independence:
+- **Disjoint Seams**: Tasks modify completely separate files, modules, and test seams. These tasks can be safely executed in parallel.
+- **Overlapping Seams**: If two unblocked tasks touch overlapping source files or verification seams, the agent **MUST serialize** their execution to prevent workspace merge conflicts.
+
+### Per-Task Subagent Model Selection & Role Title Formatting (REQ-003, REQ-006)
+Before dispatching parallel subagents, prompt the user for execution options and per-task model overrides:
+- **Default Model (`Model: "flash"`)**: If the user does not specify a custom model assignment, each subagent MUST default to `Model: "flash"` (the top normal Gemini model, currently **Gemini 3.8 Flash**). Subagent `Role` titles default to `(3.8 Flash High)` (e.g. `Role: "Feature Task Implementer (3.8 Flash High)"`). Optional thinking effort levels for 3.8 Flash include `(3.8 Flash Low)`, `(3.8 Flash Medium)`, and `(3.8 Flash High)`.
+- **High-Complexity Override (`Model: "inherit"` or `Model: "pro"`)**: For tasks involving complex architectural refactoring or tricky algorithms designated by the user, specify `Model: "inherit"` (inheriting the parent session's frontier model, e.g., **Gemini 4 Argon High**) or `Model: "pro"`. The subagent `Role` title MUST explicitly reflect this: e.g. `Role: "Feature Task Implementer (4 Argon High)"`.
+- **Explicit Role Tag Format**: Every subagent dispatched via `invoke_subagent` MUST append the exact `<Version> <Model> <Effort>` tag to its `Role` parameter:
+  - Default: `<Role Title> (3.8 Flash High)`
+  - Effort variants: `<Role Title> (3.8 Flash Low)`, `<Role Title> (3.8 Flash Medium)`
+  - Complex override: `<Role Title> (4 Argon High)`
+  - Future models (e.g., `4 Flash High`): `<Role Title> (4 Flash High)`
+
+### Subagent Dispatch Protocol (REQ-002, REQ-003, REQ-006)
+Dispatch each disjoint unblocked task using `invoke_subagent`:
+
+**Default Execution (Gemini 3.8 Flash High)**:
+```json
+{
+  "TypeName": "self",
+  "Role": "Feature Task Implementer (3.8 Flash High)",
+  "Model": "flash",
+  "Prompt": "Execute TASK-### from plan <path-to-plan.md>. Strictly modify only files within designated seam <seam>. Transition task status to In Progress and Done via aico-cli.mjs task-status."
+}
+```
+
+**Complex Architecture Override (Gemini 4 Argon High)**:
+```json
+{
+  "TypeName": "self",
+  "Role": "Feature Task Implementer (4 Argon High)",
+  "Model": "inherit",
+  "Prompt": "Execute TASK-### from plan <path-to-plan.md>. Strictly modify only files within designated seam <seam>. Transition task status to In Progress and Done via aico-cli.mjs task-status."
+}
+```
+- Each subagent executes test scaffolding and implementation strictly within its designated seam.
+- Subagents commit task status transitions using `node <skills-path>/scripts/aico-cli.mjs task-status`, synchronized by atomic `.lock` files.
+- The parent feature orchestrator waits for completion, runs `/aico-review-loop`, and confirms all seams pass.
+
+---
+
 ## Completion Criteria (Phase 1: Scaffolding & Planning)
 - [ ] Feature directory created with `ft-` prefix (`features/ft-<slug>/` or `epics/ec-<id>/features/ft-<slug>/`).
 - [ ] Deep dive blast radius analyzed and seams designated.
 - [ ] `spec-ft-<slug>.md` drafted with canonical frontmatter (`epic: "ec-<id>"` or `null`).
 - [ ] `plan-ft-<slug>.md` drafted with vertical tracer-bullet tasks, repositories array, and explicit DAG dependencies.
 - [ ] Visible in the AICO WebUI (Epic Hub or Standalone Feature Hub).
-- [ ] **Agent halted at the Human Review Gate and requested user approval before writing any code.**
+- [ ] **Agent output `[AICO GATE: Waiting for Confirmation]` and halted at the Human Review Gate to request user approval before writing any code.**

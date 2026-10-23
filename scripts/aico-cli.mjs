@@ -20,6 +20,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execFileSync, execSync } from 'node:child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -145,14 +146,23 @@ function updateFrontmatterStatus(filePath, newStatus) {
   }
 }
 
-function getKnownProjectRepositories(specsDir) {
+// @implements spec-ft-git-manifest-and-workflow-skill::TASK-GIT-005-1::REQ-001
+export function getKnownProjectRepositories(specsDir) {
   const manifestPath = path.resolve(specsDir, '.aico-project.json');
   if (fs.existsSync(manifestPath)) {
     try {
       const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+      const repos = new Set();
+      if (manifest.id) {
+        repos.add(manifest.id);
+      }
       if (Array.isArray(manifest.repositories)) {
-        return new Set(manifest.repositories.map(r => r.id));
-      } else if (manifest.name) {
+        for (const r of manifest.repositories) {
+          if (r.id) repos.add(r.id);
+        }
+      }
+      if (repos.size > 0) return repos;
+      if (manifest.name) {
         return new Set([manifest.name, `${manifest.name}-specs`, `${manifest.name}-skills`]);
       }
     } catch {}
@@ -682,7 +692,8 @@ function findCodeFiles(dir, ignoreDirs = new Set(['node_modules', '.git', 'targe
   return results;
 }
 
-function resolveAdditionalCodeRoots(codeDir, specsDir = null) {
+// @implements spec-ft-git-manifest-and-workflow-skill::TASK-GIT-005-1::REQ-001
+export function resolveAdditionalCodeRoots(codeDir, specsDir = null) {
   const roots = [path.resolve(codeDir)];
   const candidateManifests = [];
   if (specsDir) candidateManifests.push(path.resolve(specsDir, '.aico-project.json'));
@@ -696,8 +707,9 @@ function resolveAdditionalCodeRoots(codeDir, specsDir = null) {
         const mDir = path.dirname(mp);
         if (Array.isArray(manifest.repositories)) {
           for (const r of manifest.repositories) {
-            if ((r.type === 'codebase' || r.type === 'skills') && r.path) {
-              const absRepo = path.resolve(mDir, r.path);
+            if (r.type === 'codebase' || r.type === 'skills') {
+              const relPath = r.path || `../codebase/${r.id}`;
+              const absRepo = path.resolve(mDir, relPath);
               if (fs.existsSync(absRepo) && !roots.includes(absRepo)) {
                 roots.push(absRepo);
               }
@@ -718,7 +730,10 @@ function verifyTaskCompletionGate(planPath, task, frontmatter, codeDir) {
 
   if (task.seam) {
     const rawSeamFile = task.seam.split('::')[0].trim();
-    const existsInAny = codeRoots.some(r => fs.existsSync(path.resolve(r, rawSeamFile)));
+    const strippedSeamFile = rawSeamFile.replace(/^codebase\/[^/]+\//, '');
+    const existsInAny = codeRoots.some(
+      r => fs.existsSync(path.resolve(r, rawSeamFile)) || fs.existsSync(path.resolve(r, strippedSeamFile))
+    );
     if (!existsInAny) {
       throw new Error(
         `TaskCompletionGateViolation: Verification seam file "${rawSeamFile}" for ${task.id} does not exist at ${path.resolve(resolvedCodeDir, rawSeamFile)}`
@@ -768,9 +783,62 @@ function verifyTaskCompletionGate(planPath, task, frontmatter, codeDir) {
   }
 }
 
+// @implements spec-ft-specs-parallel-subagent-execution::TASK-SPECS-007-1::REQ-001
+// @implements spec-ft-specs-parallel-subagent-execution::TASK-SPECS-007-1::REQ-005
+export function withFileLock(targetPath, fn, options = {}) {
+  const lockPath = `${path.resolve(targetPath)}.lock`;
+  const staleMs = options.staleMs ?? 10000;
+  const timeoutMs = options.timeoutMs ?? 5000;
+  const startTime = Date.now();
+  const waitBuffer = new Int32Array(new SharedArrayBuffer(4));
+
+  while (true) {
+    try {
+      const fd = fs.openSync(lockPath, 'wx');
+      try {
+        fs.writeFileSync(fd, JSON.stringify({ pid: process.pid, acquiredAt: Date.now() }), 'utf8');
+      } finally {
+        fs.closeSync(fd);
+      }
+      break;
+    } catch (err) {
+      if (err && err.code === 'EEXIST') {
+        try {
+          const stat = fs.statSync(lockPath);
+          if (Date.now() - stat.mtimeMs > staleMs) {
+            try {
+              fs.unlinkSync(lockPath);
+            } catch {}
+            continue;
+          }
+        } catch {
+          continue;
+        }
+        if (Date.now() - startTime >= timeoutMs) {
+          throw new Error(`Timed out waiting to acquire lock: ${lockPath}`);
+        }
+        const retryDelayMs = 15 + Math.floor(Math.random() * 16);
+        Atomics.wait(waitBuffer, 0, 0, retryDelayMs);
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  try {
+    return fn();
+  } finally {
+    try {
+      fs.unlinkSync(lockPath);
+    } catch {}
+  }
+}
+
 // @implements spec-ft-tooling-sdd-cli::TASK-TOOL-001-2::REQ-006
 // @implements spec-ft-tooling-sdd-cli::TASK-TOOL-001-2::REQ-010
 // @implements spec-ft-tooling-sdd-cli::TASK-TOOL-001-2::REQ-011
+// @implements spec-ft-specs-parallel-subagent-execution::TASK-SPECS-007-1::REQ-001
+// @implements spec-ft-specs-parallel-subagent-execution::TASK-SPECS-007-1::REQ-005
 export function setTaskStatus(opts) {
   const planPath = path.resolve(opts.plan || '');
   if (!fs.existsSync(planPath)) {
@@ -792,117 +860,119 @@ export function setTaskStatus(opts) {
     );
   }
 
-  let content = fs.readFileSync(planPath, 'utf8');
-  const { frontmatter } = parseFrontmatter(content);
-  let tasks = parsePlanTasksDetailed(content);
-  const targetTask = tasks.find(t => t.id === opts.task);
-  if (!targetTask) {
-    throw new Error(`Task "${opts.task}" not found in ${planPath}`);
-  }
-
-  if (newStatus === 'Done' && opts.codeDir && !opts.skipGate) {
-    verifyTaskCompletionGate(planPath, targetTask, frontmatter, opts.codeDir);
-  }
-
-  // Update the target task block
-  let updatedBlock = targetTask.block.replace(/(\*\*Status\*\*:\s*)([^\n\r]+)/, `$1${newStatus}`);
-  if (opts.reason) {
-    if (/\*\*Reason\*\*:\s*[^\n\r]+/.test(updatedBlock)) {
-      updatedBlock = updatedBlock.replace(/(\*\*Reason\*\*:\s*)([^\n\r]+)/, `$1${opts.reason}`);
-    } else {
-      updatedBlock = updatedBlock.replace(
-        /(\*\*Status\*\*:\s*[^\n\r]+)/,
-        `$1\n  - **Reason**: ${opts.reason}`
-      );
+  return withFileLock(planPath, () => {
+    let content = fs.readFileSync(planPath, 'utf8');
+    const { frontmatter } = parseFrontmatter(content);
+    let tasks = parsePlanTasksDetailed(content);
+    const targetTask = tasks.find(t => t.id === opts.task);
+    if (!targetTask) {
+      throw new Error(`Task "${opts.task}" not found in ${planPath}`);
     }
-  }
-  if (opts.rewriteTarget) {
-    if (/\*\*Rewrite Target\*\*:\s*[^\n\r]+/.test(updatedBlock)) {
-      updatedBlock = updatedBlock.replace(/(\*\*Rewrite Target\*\*:\s*)([^\n\r]+)/, `$1\`${opts.rewriteTarget}\``);
-    } else {
-      const anchor = opts.reason ? /(\*\*Reason\*\*:\s*[^\n\r]+)/ : /(\*\*Status\*\*:\s*[^\n\r]+)/;
-      updatedBlock = updatedBlock.replace(anchor, `$1\n  - **Rewrite Target**: \`${opts.rewriteTarget}\``);
+
+    if (newStatus === 'Done' && opts.codeDir && !opts.skipGate) {
+      verifyTaskCompletionGate(planPath, targetTask, frontmatter, opts.codeDir);
     }
-  }
 
-  content = content.slice(0, targetTask.startIdx) + updatedBlock + content.slice(targetTask.endIdx);
-
-  // Re-parse tasks to auto-unblock any Blocked tasks whose blockers are now all Done
-  tasks = parsePlanTasksDetailed(content);
-  const doneSet = new Set(
-    tasks.filter(t => ['Done', 'Skipped/Canceled', 'Rewritten'].includes(t.status)).map(t => t.id)
-  );
-  const unblockedTasks = [];
-
-  for (let i = tasks.length - 1; i >= 0; i--) {
-    const t = tasks[i];
-    if (t.status === 'Blocked' && t.blockers.length > 0 && t.blockers.every(b => doneSet.has(b))) {
-      const newBlock = t.block.replace(/(\*\*Status\*\*:\s*)Blocked/, '$1Pending');
-      content = content.slice(0, t.startIdx) + newBlock + content.slice(t.endIdx);
-      unblockedTasks.unshift(t.id);
+    // Update the target task block
+    let updatedBlock = targetTask.block.replace(/(\*\*Status\*\*:\s*)([^\n\r]+)/, `$1${newStatus}`);
+    if (opts.reason) {
+      if (/\*\*Reason\*\*:\s*[^\n\r]+/.test(updatedBlock)) {
+        updatedBlock = updatedBlock.replace(/(\*\*Reason\*\*:\s*)([^\n\r]+)/, `$1${opts.reason}`);
+      } else {
+        updatedBlock = updatedBlock.replace(
+          /(\*\*Status\*\*:\s*[^\n\r]+)/,
+          `$1\n  - **Reason**: ${opts.reason}`
+        );
+      }
     }
-  }
+    if (opts.rewriteTarget) {
+      if (/\*\*Rewrite Target\*\*:\s*[^\n\r]+/.test(updatedBlock)) {
+        updatedBlock = updatedBlock.replace(/(\*\*Rewrite Target\*\*:\s*)([^\n\r]+)/, `$1\`${opts.rewriteTarget}\``);
+      } else {
+        const anchor = opts.reason ? /(\*\*Reason\*\*:\s*[^\n\r]+)/ : /(\*\*Status\*\*:\s*[^\n\r]+)/;
+        updatedBlock = updatedBlock.replace(anchor, `$1\n  - **Rewrite Target**: \`${opts.rewriteTarget}\``);
+      }
+    }
 
-  fs.writeFileSync(planPath, content, 'utf8');
+    content = content.slice(0, targetTask.startIdx) + updatedBlock + content.slice(targetTask.endIdx);
 
-  // Re-parse for status roll-up
-  tasks = parsePlanTasksDetailed(content);
-  const terminalStates = new Set(['Done', 'Skipped/Canceled', 'Rewritten']);
-  const allTerminal = tasks.length > 0 && tasks.every(t => terminalStates.has(t.status));
-  const anyStarted = tasks.some(t => t.status === 'In Progress' || terminalStates.has(t.status));
+    // Re-parse tasks to auto-unblock any Blocked tasks whose blockers are now all Done
+    tasks = parsePlanTasksDetailed(content);
+    const doneSet = new Set(
+      tasks.filter(t => ['Done', 'Skipped/Canceled', 'Rewritten'].includes(t.status)).map(t => t.id)
+    );
+    const unblockedTasks = [];
 
-  const planDir = path.dirname(planPath);
-  const specFile = fs.readdirSync(planDir).find(f => f.startsWith('spec-') && f.endsWith('.md'));
-  const specPath = specFile ? path.join(planDir, specFile) : null;
+    for (let i = tasks.length - 1; i >= 0; i--) {
+      const t = tasks[i];
+      if (t.status === 'Blocked' && t.blockers.length > 0 && t.blockers.every(b => doneSet.has(b))) {
+        const newBlock = t.block.replace(/(\*\*Status\*\*:\s*)Blocked/, '$1Pending');
+        content = content.slice(0, t.startIdx) + newBlock + content.slice(t.endIdx);
+        unblockedTasks.unshift(t.id);
+      }
+    }
 
-  let rolledUpStatus = frontmatter?.status || 'Draft';
-  if (allTerminal) {
-    rolledUpStatus = 'Completed';
-    updateFrontmatterStatus(planPath, 'Completed');
-    if (specPath) updateFrontmatterStatus(specPath, 'Completed');
-  } else if (anyStarted) {
-    rolledUpStatus = 'In Progress';
-    updateFrontmatterStatus(planPath, 'In Progress');
-    if (specPath) updateFrontmatterStatus(specPath, 'In Progress');
-  }
+    fs.writeFileSync(planPath, content, 'utf8');
 
-  // Check parent epic brainstorm roll-up if epic is present
-  if (frontmatter?.epic) {
-    const epicDir = path.resolve(planDir, '../..');
-    const brainPath = path.join(epicDir, `brain-${frontmatter.epic}.md`);
-    const featuresDir = path.join(epicDir, 'features');
-    if (fs.existsSync(brainPath) && fs.existsSync(featuresDir)) {
-      const siblingPlans = [];
-      for (const entry of fs.readdirSync(featuresDir, { withFileTypes: true })) {
-        if (!entry.isDirectory()) continue;
-        const fDir = path.join(featuresDir, entry.name);
-        for (const f of fs.readdirSync(fDir)) {
-          if (f.startsWith('plan-') && f.endsWith('.md')) {
-            siblingPlans.push(path.join(fDir, f));
+    // Re-parse for status roll-up
+    tasks = parsePlanTasksDetailed(content);
+    const terminalStates = new Set(['Done', 'Skipped/Canceled', 'Rewritten']);
+    const allTerminal = tasks.length > 0 && tasks.every(t => terminalStates.has(t.status));
+    const anyStarted = tasks.some(t => t.status === 'In Progress' || terminalStates.has(t.status));
+
+    const planDir = path.dirname(planPath);
+    const specFile = fs.readdirSync(planDir).find(f => f.startsWith('spec-') && f.endsWith('.md'));
+    const specPath = specFile ? path.join(planDir, specFile) : null;
+
+    let rolledUpStatus = frontmatter?.status || 'Draft';
+    if (allTerminal) {
+      rolledUpStatus = 'Completed';
+      updateFrontmatterStatus(planPath, 'Completed');
+      if (specPath) updateFrontmatterStatus(specPath, 'Completed');
+    } else if (anyStarted) {
+      rolledUpStatus = 'In Progress';
+      updateFrontmatterStatus(planPath, 'In Progress');
+      if (specPath) updateFrontmatterStatus(specPath, 'In Progress');
+    }
+
+    // Check parent epic brainstorm roll-up if epic is present
+    if (frontmatter?.epic) {
+      const epicDir = path.resolve(planDir, '../..');
+      const brainPath = path.join(epicDir, `brain-${frontmatter.epic}.md`);
+      const featuresDir = path.join(epicDir, 'features');
+      if (fs.existsSync(brainPath) && fs.existsSync(featuresDir)) {
+        const siblingPlans = [];
+        for (const entry of fs.readdirSync(featuresDir, { withFileTypes: true })) {
+          if (!entry.isDirectory()) continue;
+          const fDir = path.join(featuresDir, entry.name);
+          for (const f of fs.readdirSync(fDir)) {
+            if (f.startsWith('plan-') && f.endsWith('.md')) {
+              siblingPlans.push(path.join(fDir, f));
+            }
           }
         }
-      }
-      const allPlansCompleted =
-        siblingPlans.length > 0 &&
-        siblingPlans.every(p => {
-          const { frontmatter: pFm } = parseFrontmatter(fs.readFileSync(p, 'utf8'));
-          return pFm?.status === 'Completed';
-        });
-      if (allPlansCompleted) {
-        updateFrontmatterStatus(brainPath, 'Completed');
-      } else if (anyStarted) {
-        updateFrontmatterStatus(brainPath, 'In Progress');
+        const allPlansCompleted =
+          siblingPlans.length > 0 &&
+          siblingPlans.every(p => {
+            const { frontmatter: pFm } = parseFrontmatter(fs.readFileSync(p, 'utf8'));
+            return pFm?.status === 'Completed';
+          });
+        if (allPlansCompleted) {
+          updateFrontmatterStatus(brainPath, 'Completed');
+        } else if (anyStarted) {
+          updateFrontmatterStatus(brainPath, 'In Progress');
+        }
       }
     }
-  }
 
-  return {
-    planPath,
-    taskId: opts.task,
-    status: newStatus,
-    unblockedTasks,
-    planStatus: rolledUpStatus,
-  };
+    return {
+      planPath,
+      taskId: opts.task,
+      status: newStatus,
+      unblockedTasks,
+      planStatus: rolledUpStatus,
+    };
+  });
 }
 
 // @implements spec-ft-tooling-sdd-cli::TASK-TOOL-001-3::REQ-007
@@ -919,98 +989,100 @@ export function amendPlan(opts) {
     throw new Error('plan-amend requires --title, --addresses, and --seam');
   }
 
-  let content = fs.readFileSync(planPath, 'utf8');
-  const { frontmatter } = parseFrontmatter(content);
-  const tasks = parsePlanTasksDetailed(content);
+  return withFileLock(planPath, () => {
+    let content = fs.readFileSync(planPath, 'utf8');
+    const { frontmatter } = parseFrontmatter(content);
+    const tasks = parsePlanTasksDetailed(content);
 
-  // Determine next sequential TASK ID
-  let nextTaskId = opts.taskId;
-  if (!nextTaskId) {
-    if (tasks.length > 0) {
-      const lastId = tasks[tasks.length - 1].id;
-      const m = lastId.match(/^(TASK-[A-Za-z0-9\-]+-)(\d+)$/);
-      if (m) {
-        const prefix = m[1];
-        const padLen = m[2].length;
-        const maxSeq = Math.max(
-          ...tasks.map(t => {
-            const tm = t.id.match(/^(?:TASK-[A-Za-z0-9\-]+-)(\d+)$/);
-            return tm ? Number(tm[1]) : 0;
-          })
-        );
-        nextTaskId = `${prefix}${String(maxSeq + 1).padStart(padLen, '0')}`;
+    // Determine next sequential TASK ID
+    let nextTaskId = opts.taskId;
+    if (!nextTaskId) {
+      if (tasks.length > 0) {
+        const lastId = tasks[tasks.length - 1].id;
+        const m = lastId.match(/^(TASK-[A-Za-z0-9\-]+-)(\d+)$/);
+        if (m) {
+          const prefix = m[1];
+          const padLen = m[2].length;
+          const maxSeq = Math.max(
+            ...tasks.map(t => {
+              const tm = t.id.match(/^(?:TASK-[A-Za-z0-9\-]+-)(\d+)$/);
+              return tm ? Number(tm[1]) : 0;
+            })
+          );
+          nextTaskId = `${prefix}${String(maxSeq + 1).padStart(padLen, '0')}`;
+        } else {
+          nextTaskId = `${lastId}-2`;
+        }
       } else {
-        nextTaskId = `${lastId}-2`;
+        nextTaskId = 'TASK-AMEND-001';
       }
-    } else {
-      nextTaskId = 'TASK-AMEND-001';
     }
-  }
 
-  const formattedAddresses = addressesRaw
-    .split(',')
-    .map(s => `\`${s.trim().replace(/^`|`$/g, '')}\``)
-    .join(', ');
-  const blockedBy = opts.blockedBy
-    ? String(opts.blockedBy)
-        .split(',')
-        .map(s => `\`${s.trim().replace(/^`|`$/g, '')}\``)
-        .join(', ')
-    : 'None (Can start immediately)';
-  const status = opts.blockedBy && !/^none$/i.test(opts.blockedBy) ? 'Blocked' : 'Pending';
-  const deliversList = opts.delivers
-    ? String(opts.delivers)
-        .split(';')
-        .map(s => s.trim())
-        .filter(Boolean)
-    : [`Implements ${title}`];
+    const formattedAddresses = addressesRaw
+      .split(',')
+      .map(s => `\`${s.trim().replace(/^`|`$/g, '')}\``)
+      .join(', ');
+    const blockedBy = opts.blockedBy
+      ? String(opts.blockedBy)
+          .split(',')
+          .map(s => `\`${s.trim().replace(/^`|`$/g, '')}\``)
+          .join(', ')
+      : 'None (Can start immediately)';
+    const status = opts.blockedBy && !/^none$/i.test(opts.blockedBy) ? 'Blocked' : 'Pending';
+    const deliversList = opts.delivers
+      ? String(opts.delivers)
+          .split(';')
+          .map(s => s.trim())
+          .filter(Boolean)
+      : [`Implements ${title}`];
 
-  const taskBlock = [
-    `- **${nextTaskId}**: ${title}`,
-    `  - **Status**: ${status}`,
-    `  - **Addresses**: ${formattedAddresses}`,
-    `  - **Blocked by**: ${blockedBy}`,
-    '  - **What it delivers**:',
-    ...deliversList.map(d => `    - ${d}`),
-    `  - **Verification Seam**: \`${seam}\``,
-    '',
-  ].join('\n');
+    const taskBlock = [
+      `- **${nextTaskId}**: ${title}`,
+      `  - **Status**: ${status}`,
+      `  - **Addresses**: ${formattedAddresses}`,
+      `  - **Blocked by**: ${blockedBy}`,
+      '  - **What it delivers**:',
+      ...deliversList.map(d => `    - ${d}`),
+      `  - **Verification Seam**: \`${seam}\``,
+      '',
+    ].join('\n');
 
-  const nowIso = new Date().toISOString();
-  const logEntry = `- **${nowIso}**: ${rationale} (Added \`${nextTaskId}\`).`;
+    const nowIso = new Date().toISOString();
+    const logEntry = `- **${nowIso}**: ${rationale} (Added \`${nextTaskId}\`).`;
 
-  const amendHeaderRegex = /\n(##\s*(?:\d+\.\s*)?Amendment Log\r?\n)/i;
-  const amendMatch = content.match(amendHeaderRegex);
+    const amendHeaderRegex = /\n(##\s*(?:\d+\.\s*)?Amendment Log\r?\n)/i;
+    const amendMatch = content.match(amendHeaderRegex);
 
-  if (amendMatch) {
-    const insertIdx = amendMatch.index;
-    const beforeAmend = content.slice(0, insertIdx).trimEnd();
-    const afterAmend = content.slice(insertIdx).trimEnd();
-    content = `${beforeAmend}\n\n${taskBlock}\n${afterAmend}\n${logEntry}\n`;
-  } else {
-    content = `${content.trimEnd()}\n\n${taskBlock}\n---\n\n## 3. Amendment Log\n\n${logEntry}\n`;
-  }
+    if (amendMatch) {
+      const insertIdx = amendMatch.index;
+      const beforeAmend = content.slice(0, insertIdx).trimEnd();
+      const afterAmend = content.slice(insertIdx).trimEnd();
+      content = `${beforeAmend}\n\n${taskBlock}\n${afterAmend}\n${logEntry}\n`;
+    } else {
+      content = `${content.trimEnd()}\n\n${taskBlock}\n---\n\n## 3. Amendment Log\n\n${logEntry}\n`;
+    }
 
-  fs.writeFileSync(planPath, content, 'utf8');
+    fs.writeFileSync(planPath, content, 'utf8');
 
-  // Reopen Plan, Spec, and parent Epic Brainstorm to "In Progress"
-  updateFrontmatterStatus(planPath, 'In Progress');
-  const planDir = path.dirname(planPath);
-  const specFile = fs.readdirSync(planDir).find(f => f.startsWith('spec-') && f.endsWith('.md'));
-  if (specFile) {
-    updateFrontmatterStatus(path.join(planDir, specFile), 'In Progress');
-  }
-  if (frontmatter?.epic) {
-    const epicDir = path.resolve(planDir, '../..');
-    const brainPath = path.join(epicDir, `brain-${frontmatter.epic}.md`);
-    updateFrontmatterStatus(brainPath, 'In Progress');
-  }
+    // Reopen Plan, Spec, and parent Epic Brainstorm to "In Progress"
+    updateFrontmatterStatus(planPath, 'In Progress');
+    const planDir = path.dirname(planPath);
+    const specFile = fs.readdirSync(planDir).find(f => f.startsWith('spec-') && f.endsWith('.md'));
+    if (specFile) {
+      updateFrontmatterStatus(path.join(planDir, specFile), 'In Progress');
+    }
+    if (frontmatter?.epic) {
+      const epicDir = path.resolve(planDir, '../..');
+      const brainPath = path.join(epicDir, `brain-${frontmatter.epic}.md`);
+      updateFrontmatterStatus(brainPath, 'In Progress');
+    }
 
-  return {
-    planPath,
-    taskId: nextTaskId,
-    status: 'In Progress',
-  };
+    return {
+      planPath,
+      taskId: nextTaskId,
+      status: 'In Progress',
+    };
+  });
 }
 
 // @implements spec-ft-tooling-sdd-cli::TASK-TOOL-001-3::REQ-008
@@ -1610,8 +1682,26 @@ export function runVerifyCli(rawArgs) {
 
     for (const seam of report.seams) {
       const rawSeamFile = seam.seamString.split('::')[0].trim();
-      const absPath = path.resolve(codeRoot, rawSeamFile);
-      seam.exists = fs.existsSync(absPath);
+      const strippedSeamFile = rawSeamFile.replace(/^codebase\/[^/]+\//, '');
+      let absPath = path.resolve(codeRoot, rawSeamFile);
+      let exists = fs.existsSync(absPath);
+      if (!exists) {
+        for (const r of allRoots) {
+          const cand1 = path.resolve(r, rawSeamFile);
+          const cand2 = path.resolve(r, strippedSeamFile);
+          if (fs.existsSync(cand1)) {
+            absPath = cand1;
+            exists = true;
+            break;
+          }
+          if (fs.existsSync(cand2)) {
+            absPath = cand2;
+            exists = true;
+            break;
+          }
+        }
+      }
+      seam.exists = exists;
       seam.resolvedPath = absPath;
 
       if (seam.exists) {
@@ -1745,6 +1835,262 @@ export function runVerifyCli(rawArgs) {
   return hasCriticalErrors ? 1 : 0;
 }
 
+// @implements spec-ft-git-manifest-and-workflow-skill::TASK-GIT-005-1::REQ-001
+// @implements spec-ft-git-manifest-and-workflow-skill::TASK-GIT-005-4::REQ-003
+// @implements spec-ft-git-manifest-and-workflow-skill::TASK-GIT-005-4::REQ-006
+// @implements spec-ft-git-manifest-and-workflow-skill::TASK-GIT-005-4::REQ-007
+
+export function resolveCloneTargetDir({ workspaceRoot, repoId, type }) {
+  if (type === 'specs') {
+    return path.resolve(workspaceRoot, repoId);
+  }
+  return path.resolve(workspaceRoot, 'codebase', repoId);
+}
+
+export function gitClone({ workspaceRoot, repoId, url, type = 'codebase', dryRun = false }) {
+  if (!workspaceRoot) throw new Error('workspaceRoot is required for gitClone');
+  if (!repoId) throw new Error('repoId is required for gitClone');
+  if (!url) throw new Error('url is required for gitClone');
+
+  const targetDir = resolveCloneTargetDir({ workspaceRoot, repoId, type });
+
+  if (dryRun) {
+    return {
+      repoId,
+      type,
+      url,
+      targetDir,
+      cloned: false,
+      dryRun: true,
+    };
+  }
+
+  const parentDir = path.dirname(targetDir);
+  fs.mkdirSync(parentDir, { recursive: true });
+
+  try {
+    const stdout = execFileSync('git', ['clone', url, targetDir], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    return {
+      repoId,
+      type,
+      url,
+      targetDir,
+      cloned: true,
+      dryRun: false,
+      output: stdout.trim(),
+    };
+  } catch (err) {
+    const errorDetails = err.stderr ? err.stderr.trim() : err.message;
+    throw new Error(`Git clone failed for ${repoId}: ${errorDetails}`);
+  }
+}
+
+export function resolveRepoDir({ workspaceRoot, repoId, repoDir }) {
+  if (repoDir) {
+    return path.resolve(repoDir);
+  }
+  if (!workspaceRoot || !repoId) {
+    throw new Error('Either repoDir or both workspaceRoot and repoId must be provided');
+  }
+  const candidates = [
+    path.resolve(workspaceRoot, '.aico-project.json'),
+    path.resolve(workspaceRoot, 'aico-specs', '.aico-project.json'),
+    path.resolve(workspaceRoot, `${repoId}`, '.aico-project.json'),
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) {
+      try {
+        const manifest = JSON.parse(fs.readFileSync(c, 'utf8'));
+        const mDir = path.dirname(c);
+        if (manifest.id === repoId) {
+          return mDir;
+        }
+        if (Array.isArray(manifest.repositories)) {
+          const entry = manifest.repositories.find(r => r.id === repoId);
+          if (entry) {
+            const relPath = entry.path || `../codebase/${entry.id}`;
+            return path.resolve(mDir, relPath);
+          }
+        }
+      } catch {}
+    }
+  }
+
+  if (repoId.endsWith('-specs') || repoId === 'specs') {
+    return path.resolve(workspaceRoot, repoId);
+  }
+  return path.resolve(workspaceRoot, 'codebase', repoId);
+}
+
+export function gitStatus({ repoDir, workspaceRoot, repoId }) {
+  const dir = resolveRepoDir({ workspaceRoot, repoId, repoDir });
+  if (!fs.existsSync(dir)) {
+    throw new Error(`Repository directory does not exist: ${dir}`);
+  }
+
+  try {
+    const stdout = execFileSync('git', ['status', '--porcelain=v2', '--branch'], {
+      cwd: dir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    let branch = null;
+    let upstream = null;
+    let ahead = 0;
+    let behind = 0;
+    let staged = 0;
+    let unstaged = 0;
+    let untracked = 0;
+
+    const lines = stdout.split('\n');
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line) continue;
+      if (line.startsWith('# branch.head ')) {
+        branch = line.slice(14).trim();
+        if (branch === '(detached)') branch = null;
+      } else if (line.startsWith('# branch.upstream ')) {
+        upstream = line.slice(18).trim();
+      } else if (line.startsWith('# branch.ab ')) {
+        const parts = line.slice(12).trim().split(/\s+/);
+        ahead = parseInt(parts[0].replace('+', ''), 10) || 0;
+        behind = parseInt(parts[1].replace('-', ''), 10) || 0;
+      } else if (line.startsWith('1 ') || line.startsWith('2 ')) {
+        const xy = line.slice(2, 4);
+        if (xy[0] !== '.') staged++;
+        if (xy[1] !== '.') unstaged++;
+      } else if (line.startsWith('u ')) {
+        staged++;
+      } else if (line.startsWith('? ')) {
+        untracked++;
+      }
+    }
+
+    const isClean = staged === 0 && unstaged === 0 && untracked === 0;
+
+    return {
+      repoDir: dir,
+      branch,
+      upstream,
+      ahead,
+      behind,
+      clean: isClean,
+      staged,
+      unstaged,
+      untracked,
+      output: stdout.trim(),
+    };
+  } catch (err) {
+    const errorDetails = err.stderr ? err.stderr.trim() : err.message;
+    throw new Error(`Git status failed in ${dir}: ${errorDetails}`);
+  }
+}
+
+export function gitCommit({ repoDir, workspaceRoot, repoId, message, all = false }) {
+  if (!message || !message.trim()) {
+    throw new Error('Commit message is required');
+  }
+  const dir = resolveRepoDir({ workspaceRoot, repoId, repoDir });
+  if (!fs.existsSync(dir)) {
+    throw new Error(`Repository directory does not exist: ${dir}`);
+  }
+
+  try {
+    execFileSync('git', ['add', '-A'], {
+      cwd: dir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    const stdout = execFileSync('git', ['commit', '-m', message.trim()], {
+      cwd: dir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    let hash = '';
+    try {
+      hash = execFileSync('git', ['rev-parse', 'HEAD'], {
+        cwd: dir,
+        encoding: 'utf8',
+      }).trim();
+    } catch {}
+
+    return {
+      repoDir: dir,
+      success: true,
+      message: message.trim(),
+      hash,
+      output: stdout.trim(),
+    };
+  } catch (err) {
+    const errorDetails = err.stderr ? err.stderr.trim() : err.message;
+    throw new Error(`Git commit failed in ${dir}: ${errorDetails}`);
+  }
+}
+
+export function gitPull({ repoDir, workspaceRoot, repoId, remote = 'origin', branch }) {
+  const dir = resolveRepoDir({ workspaceRoot, repoId, repoDir });
+  if (!fs.existsSync(dir)) {
+    throw new Error(`Repository directory does not exist: ${dir}`);
+  }
+
+  const args = ['pull'];
+  if (branch) {
+    args.push(remote, branch);
+  }
+
+  try {
+    const stdout = execFileSync('git', args, {
+      cwd: dir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    return {
+      repoDir: dir,
+      success: true,
+      output: stdout.trim(),
+    };
+  } catch (err) {
+    const errorDetails = err.stderr ? err.stderr.trim() : err.message;
+    throw new Error(`Git pull failed in ${dir}: ${errorDetails}`);
+  }
+}
+
+export function gitPush({ repoDir, workspaceRoot, repoId, remote = 'origin', branch, setUpstream = false }) {
+  const dir = resolveRepoDir({ workspaceRoot, repoId, repoDir });
+  if (!fs.existsSync(dir)) {
+    throw new Error(`Repository directory does not exist: ${dir}`);
+  }
+
+  const args = ['push'];
+  if (setUpstream && branch) {
+    args.push('-u', remote, branch);
+  } else if (branch) {
+    args.push(remote, branch);
+  }
+
+  try {
+    const stdout = execFileSync('git', args, {
+      cwd: dir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    return {
+      repoDir: dir,
+      success: true,
+      output: stdout.trim(),
+    };
+  } catch (err) {
+    const errorDetails = err.stderr ? err.stderr.trim() : err.message;
+    throw new Error(`Git push failed in ${dir}: ${errorDetails}`);
+  }
+}
+
 // ============================================================================
 // CLI Entry Dispatcher
 // ============================================================================
@@ -1815,10 +2161,10 @@ async function main() {
       }
       case 'task-status': {
         const res = setTaskStatus({
-          plan: flags.plan,
-          task: flags.task,
-          status: flags.status,
-          reason: flags.reason,
+          plan: flags.plan || flags._[0],
+          task: flags.task || flags._[1],
+          status: flags.status || flags._[2],
+          reason: flags.reason || flags._[3],
           rewriteTarget: flags['rewrite-target'],
           codeDir: flags['code-dir'],
           skipGate: Boolean(flags['skip-gate']),
@@ -1873,9 +2219,79 @@ async function main() {
         process.exit(exitCode);
         break;
       }
+      case 'git-status': {
+        const res = gitStatus({
+          repoDir: flags['repo-dir'] || flags.dir,
+          workspaceRoot: flags.workspace || flags['workspace-root'],
+          repoId: flags.repo || flags['repo-id'],
+        });
+        if (flags.json) console.log(JSON.stringify(res, null, 2));
+        else {
+          console.log(`Repository: ${res.repoDir}`);
+          console.log(`Branch: ${res.branch || 'detached'}`);
+          console.log(`Clean: ${res.clean ? 'Yes' : 'No'} (staged: ${res.staged}, unstaged: ${res.unstaged}, untracked: ${res.untracked})`);
+          if (res.upstream) console.log(`Upstream: ${res.upstream} (ahead: ${res.ahead}, behind: ${res.behind})`);
+        }
+        break;
+      }
+      case 'git-pull': {
+        const res = gitPull({
+          repoDir: flags['repo-dir'] || flags.dir,
+          workspaceRoot: flags.workspace || flags['workspace-root'],
+          repoId: flags.repo || flags['repo-id'],
+          remote: flags.remote || 'origin',
+          branch: flags.branch,
+        });
+        if (flags.json) console.log(JSON.stringify(res, null, 2));
+        else console.log(`Pulled successfully in ${res.repoDir}:\n${res.output}`);
+        break;
+      }
+      case 'git-push': {
+        const res = gitPush({
+          repoDir: flags['repo-dir'] || flags.dir,
+          workspaceRoot: flags.workspace || flags['workspace-root'],
+          repoId: flags.repo || flags['repo-id'],
+          remote: flags.remote || 'origin',
+          branch: flags.branch,
+          setUpstream: Boolean(flags['set-upstream'] || flags.u),
+        });
+        if (flags.json) console.log(JSON.stringify(res, null, 2));
+        else console.log(`Pushed successfully from ${res.repoDir}:\n${res.output}`);
+        break;
+      }
+      case 'git-commit': {
+        const res = gitCommit({
+          repoDir: flags['repo-dir'] || flags.dir,
+          workspaceRoot: flags.workspace || flags['workspace-root'],
+          repoId: flags.repo || flags['repo-id'],
+          message: flags.message || flags.m,
+          all: Boolean(flags.all || flags.a),
+        });
+        if (flags.json) console.log(JSON.stringify(res, null, 2));
+        else console.log(`Committed [${res.hash?.slice(0, 7) || 'HEAD'}]: ${res.message}`);
+        break;
+      }
+      case 'git-clone': {
+        const res = gitClone({
+          workspaceRoot: flags.workspace || flags['workspace-root'] || process.cwd(),
+          repoId: flags.repo || flags['repo-id'],
+          url: flags.url,
+          type: flags.type || 'codebase',
+          dryRun: Boolean(flags['dry-run']),
+        });
+        if (flags.json) console.log(JSON.stringify(res, null, 2));
+        else {
+          if (res.dryRun) {
+            console.log(`[DRY RUN] Would clone ${res.repoId} (${res.type}) from ${res.url} into ${res.targetDir}`);
+          } else {
+            console.log(`Cloned ${res.repoId} into ${res.targetDir}`);
+          }
+        }
+        break;
+      }
       default: {
         console.error(
-          `Unknown subcommand "${subcommand}". Available subcommands: version, scaffold-epic, scaffold-feature, scaffold-adr, upsert-glossary, task-status, plan-amend, frontier, trace-tags, verify`
+          `Unknown subcommand "${subcommand}". Available subcommands: version, scaffold-epic, scaffold-feature, scaffold-adr, upsert-glossary, task-status, plan-amend, frontier, trace-tags, verify, git-status, git-pull, git-push, git-commit, git-clone`
         );
         process.exit(1);
       }

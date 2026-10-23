@@ -89,3 +89,57 @@ node <skills-path>/scripts/aico-cli.mjs frontier --specs-dir <specs-root> [--epi
 >   3. Designated public test seams.
 > - **DO NOT begin implementation** without explicit user review and instruction to execute.
 
+---
+
+## 4. Parallel Subagent Execution & Per-Task Model Routing (`invoke_subagent`)
+
+When decomposing specifications into vertical tracer bullets, the resulting DAG often surfaces multiple tasks that can start concurrently:
+
+### Ready Frontier Inspection
+Evaluate the active frontier dynamically via `aico-cli.mjs`:
+```bash
+node <skills-path>/scripts/aico-cli.mjs frontier --plan <path-to-plan.md> --json
+# Or across an entire epic:
+node <skills-path>/scripts/aico-cli.mjs frontier --specs-dir <specs-root> --epic ec-<id> --json
+```
+If two or more tasks reside on `ready_frontier` simultaneously, they are candidates for parallel subagent execution.
+
+### Seam Disjointness Check (REQ-004)
+Before recommending parallel execution, verify whether unblocked frontier tasks touch disjoint source files and verification seams:
+- **Disjoint Seams**: Tasks modify completely separate files, modules, and test seams. These tasks can be safely dispatched in parallel.
+- **Overlapping Seams**: If two or more unblocked tasks modify shared source files, shared test files, or overlapping verification seams, the orchestration workflow **MUST serialize** their execution rather than running them concurrently in the same workspace.
+
+### Per-Task Subagent Model Selection & Role Title Formatting (REQ-003, REQ-006)
+Before dispatching parallel subagents, prompt the user for per-task model overrides:
+- **Default Model (`Model: "flash"`)**: If the user does not specify a custom model assignment, each subagent MUST default to `Model: "flash"` (the top normal Gemini model, currently **Gemini 3.8 Flash**), providing fast and cost-effective execution. Subagent `Role` titles default to `(3.8 Flash High)` (e.g. `Role: "Task Implementer (3.8 Flash High)"`). Optional thinking effort levels for 3.8 Flash include `(3.8 Flash Low)`, `(3.8 Flash Medium)`, and `(3.8 Flash High)`.
+- **High-Complexity Override (`Model: "inherit"` or `Model: "pro"`)**: For tasks involving complex architectural trade-offs, stateful concurrency, or storage engine invariants designated by the user, specify `Model: "inherit"` (inheriting the parent session's frontier model, e.g., **Gemini 4 Argon High**) or `Model: "pro"`. The subagent `Role` title MUST explicitly reflect this: e.g. `Role: "Task Implementer (4 Argon High)"`.
+- **Explicit Role Tag Format**: Every subagent dispatched via `invoke_subagent` MUST append the exact `<Version> <Model> <Effort>` tag to its `Role` parameter:
+  - Default: `<Role Title> (3.8 Flash High)`
+  - Effort variants: `<Role Title> (3.8 Flash Low)`, `<Role Title> (3.8 Flash Medium)`
+  - Complex override: `<Role Title> (4 Argon High)`
+  - Future models (e.g., `4 Flash High`): `<Role Title> (4 Flash High)`
+
+### Subagent Dispatch Protocol (REQ-002, REQ-003, REQ-006)
+Once the developer approves parallel execution, dispatch independent subagents via `invoke_subagent`:
+
+**Default Execution (Gemini 3.8 Flash High)**:
+```json
+{
+  "TypeName": "self",
+  "Role": "Task Implementer (3.8 Flash High)",
+  "Model": "flash",
+  "Prompt": "Implement TASK-### scoped strictly to its designated seam..."
+}
+```
+
+**Complex Architecture Override (Gemini 4 Argon High)**:
+```json
+{
+  "TypeName": "self",
+  "Role": "Task Implementer (4 Argon High)",
+  "Model": "inherit",
+  "Prompt": "Implement TASK-### scoped strictly to its designated seam..."
+}
+```
+- Each subagent is strictly scoped to its assigned `TASK-*` and designated seam.
+- Subagents commit task status transitions using `node <skills-path>/scripts/aico-cli.mjs task-status`, which synchronizes writes using atomic `.lock` files.

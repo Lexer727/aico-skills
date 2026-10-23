@@ -67,9 +67,13 @@ Recommend running `/aico-test-scaffolding` and `/aico-implementation` to complet
 If zero critical/high findings exist and Kùzu graph closure is 100%:
 > **"✅ Converged: Implementation completely satisfies spec, coding standards, and graph traceability."**
 
+**Automated Repository Synchronization (REQ-005)**:
+Upon reaching full convergence, the agent verifies that all modified project repositories (`aico`, `aico-specs`, `aico-skills`) are clean and fully pushed upstream. If any uncommitted changes or unpushed commits remain, the agent stages, commits with conventional message, and pushes automatically.
+
 ---
 
 ## Completion Criteria
 - [ ] Standards review and Spec review reported separately.
 - [ ] Kùzu graph traceability checked (zero dangling requirements).
 - [ ] Convergence verdict emitted (either clean or tasks appended).
+- [ ] Multi-repo automated git synchronization executed (all repositories clean and pushed).
