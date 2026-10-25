@@ -87,7 +87,7 @@ Evaluate against the triage criteria:
   - Handoff to `/aico-feature` passing the requirements context.
 
 > [!NOTE]
-> **Scaffolding vs. Implementation Boundary**: Handoff to `/aico-epic` or `/aico-feature` exclusively scopes and drafts the specifications and task DAG plans (Phase 1: Planning). Downstream skills must **never** immediately begin writing code or tests without an explicit intermediate developer review and approval gate. Whenever halting to await developer routing or architectural decision confirmation, output `[AICO GATE: Waiting for Confirmation]`.
+> **Scaffolding vs. Implementation Boundary**: Handoff to `/aico-epic` or `/aico-feature` exclusively scopes and drafts the specifications and task DAG plans (Phase 1: Planning). Downstream skills must **never** immediately begin writing code or tests without an explicit intermediate developer review and approval gate. Whenever halting to await developer routing or architectural decision confirmation, output `[AICO GATE: Waiting for Confirmation]` and invoke the interactive `ask_question` tool with structured selectable choices (e.g. `(Recommended) Approve and proceed`, candidate architectural approaches, `Cancel`) so the developer can confirm with one click or enter adjustments.
 
 ---
 

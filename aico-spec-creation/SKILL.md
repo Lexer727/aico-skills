@@ -80,7 +80,7 @@ Add at least one `Unwanted Behavior` pattern for:
 ### Step 6: Specification Review Gate (MANDATORY STOP)
 Once `spec-ft-*.md` is drafted and verified, the agent must halt for user review and approval (Phase 2 Spec Sign-Off):
 - **Output `[AICO GATE: Waiting for Confirmation]`** to clearly signal the review gate to the developer and terminal monitors.
-- Present the EARS functional requirements, public test seams, and scope boundaries.
+- Present the EARS functional requirements, public test seams, and scope boundaries, and invoke the interactive `ask_question` tool with structured options (e.g. `(Recommended) Approve and proceed to implementation`, `Request adjustments`, `Cancel`).
 - **DO NOT proceed to implementation** without explicit developer sign-off.
 
 ---

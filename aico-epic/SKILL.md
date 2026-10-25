@@ -81,7 +81,7 @@ MERGE (s)-[:DERIVED_FROM]->(b)
 > [!IMPORTANT]
 > **Strict SDD Phase Boundary**: The framing and planning of an Epic concludes once `brain-ec-*.md` and all child `spec-ft-*.md` and `plan-ft-*.md` artifacts are created and verified.
 > 
-> - **MANDATORY STOP**: The agent MUST STOP execution here. Output `[AICO GATE: Waiting for Confirmation]` to clearly signal the review gate to the developer and terminal monitors. Present the scaffolded epic summary, child feature specifications, and task DAG frontiers to the developer.
+> - **MANDATORY STOP**: The agent MUST STOP execution here. Output `[AICO GATE: Waiting for Confirmation]` to clearly signal the review gate to the developer and terminal monitors. Present the scaffolded epic summary, child feature specifications, and task DAG frontiers to the developer, and invoke the interactive `ask_question` tool with structured choices (e.g. `(Recommended) Approve and proceed`, candidate architectural choices, `Cancel`).
 > - **DO NOT proceed to implementation** (`/aico-test-scaffolding` or `/aico-implementation`) without explicit user review and instruction to begin execution.
 > - Never bundle scaffolding and implementation into a single turn or confirmation question.
 

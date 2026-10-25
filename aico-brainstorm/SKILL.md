@@ -21,7 +21,7 @@ Before asking questions, retrieve prior context using the AICO MCP tool `search_
 ### 2. Socratic Grilling Loop
 Map the problem space as a **design tree**. Identify the **decision frontier**: the questions that can be asked *now* without guessing future answers.
 
-Present questions in **rounds** (maximum 3–4 high-impact questions per round). **Never ask a question without providing your recommended answer and reasoning**:
+Present questions in **rounds** (maximum 3–4 high-impact questions per round) using the interactive `ask_question` tool with structured selectable options (prefix recommended option with `(Recommended) ...`). **Never ask a question without providing your recommended answer and reasoning**:
 
 ```markdown
 ❓ **Q1** - **<Decision Title>**: <Context and question, including concrete options>

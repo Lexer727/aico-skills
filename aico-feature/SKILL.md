@@ -132,6 +132,7 @@ Invoke **`/aico-planning`**:
 > **Phase 1 Concludes Here**: Once `spec-ft-*.md` and `plan-ft-*.md` are generated and verified, the agent **MUST STOP**.
 > - Output `[AICO GATE: Waiting for Confirmation]` to clearly signal the review gate to the developer and terminal monitors.
 > - Present the EARS requirements, designated test seams, and DAG task plan to the developer.
+> - Invoke the interactive `ask_question` tool with structured choices (e.g. `(Recommended) Confirm and proceed to implementation`, `Request adjustments`, `Cancel`) so the developer can approve with one click or enter adjustments.
 > - **DO NOT start Phase 2 (Test Scaffolding or Implementation)** without explicit developer confirmation to begin.
 > - Never assume approval or bundle planning and code changes into a single turn.
 

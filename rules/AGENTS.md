@@ -8,6 +8,10 @@
   3. **Write Specs/Plans & Halt for Implementation Confirmation**: Once approved, write or update the `spec-*.md` and `plan-*.md` artifacts (`status: "Draft"`), run `verify-artifacts.mjs`, and **immediately halt**. Never write/update specs and implement code in the same turn.
   4. **Implement Only After Post-Spec Confirmation**: Wait for explicit developer confirmation of the written specification and plan files before modifying any codebase source or test files.
 
-## 2. AICO Blueprint Conformance
+## 2. Interactive Multi-Choice Gates & Clarifications
+- **Interactive Multi-Choice Gate Execution**: When halting at Phase 2 (Spec Sign-Off Gate) and Phase 3 (Implementation Confirmation Gate), the agent MUST invoke the interactive `ask_question` tool with structured selectable choices (e.g., `(Recommended) Approve and proceed`, candidate architectural options, `Cancel`) so the developer can confirm with one click or enter adjustments via the write-in option, instead of passively ending turns with text.
+- **Structured Socratic Clarifications**: Whenever clarifying underspecified requirements, architectural alternatives, or design trade-offs (e.g. during `/aico-start` or `/aico-brainstorm`), the agent MUST use `ask_question` with structured options.
+
+## 3. AICO Blueprint Conformance
 - All specification and plan artifacts must strictly adhere to Blueprint v0.1.2 standards with decoupled YAML frontmatter ordering and relative links.
 - No absolute `file:///` URIs inside markdown files.
