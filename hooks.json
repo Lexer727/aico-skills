@@ -1,0 +1,42 @@
+{
+  "aico-status-bridge": {
+    "PreToolUse": [
+      {
+        "matcher": "ask_question",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ./scripts/aico-hook-status.mjs waiting_for_input",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "ask_question",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ./scripts/aico-hook-status.mjs working",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "node ./scripts/aico-hook-status.mjs working",
+        "timeout": 5
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "node ./scripts/aico-hook-status.mjs finished",
+        "timeout": 5
+      }
+    ]
+  }
+}
