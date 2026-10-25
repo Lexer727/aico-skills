@@ -32,8 +32,12 @@ test('REQ-002: Parallel Subagent Execution protocol and model routing are docume
     const codebaseContent = fs.readFileSync(codebaseSkillPath, 'utf8');
     const agentContent = fs.readFileSync(agentSkillPath, 'utf8');
 
-    // Both codebase and .agents copies must be strictly in sync
-    assert.equal(codebaseContent, agentContent, `Content mismatch between codebase and .agents for ${skill}`);
+    // Both codebase and .agents copies must be strictly in sync (cross-platform newline normalization)
+    assert.equal(
+      codebaseContent.replace(/\r\n/g, '\n'),
+      agentContent.replace(/\r\n/g, '\n'),
+      `Content mismatch between codebase and .agents for ${skill}`
+    );
 
     // Verify invoke_subagent protocol documentation
     assert.ok(
