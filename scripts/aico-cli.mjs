@@ -679,11 +679,11 @@ function findCodeFiles(dir, ignoreDirs = new Set(['node_modules', '.git', 'targe
       return;
     }
     for (const entry of entries) {
-      if (entry.name.startsWith('.') && entry.name !== '.scratch') continue;
+      if (entry.name.startsWith('.') && entry.name !== '.scratch' && entry.name !== '.github') continue;
       const full = path.join(current, entry.name);
       if (entry.isDirectory()) {
         if (!ignoreDirs.has(entry.name)) walk(full);
-      } else if (entry.isFile() && /\.(rs|ts|tsx|js|jsx|mjs|py|sh)$/.test(entry.name) && !entry.name.endsWith('.d.ts')) {
+      } else if (entry.isFile() && /\.(rs|ts|tsx|js|jsx|mjs|py|sh|ps1|psm1|yml|yaml)$/.test(entry.name) && !entry.name.endsWith('.d.ts')) {
         results.push(full);
       }
     }
@@ -1233,7 +1233,7 @@ function findFiles(dir, filterFn, ignoreDirs = new Set(['node_modules', '.git', 
     }
 
     for (const entry of entries) {
-      if (entry.name.startsWith('.') && entry.name !== '.scratch') continue;
+      if (entry.name.startsWith('.') && entry.name !== '.scratch' && entry.name !== '.github') continue;
       if (entry.isDirectory()) {
         if (!ignoreDirs.has(entry.name)) {
           walk(path.join(current, entry.name));
@@ -1584,7 +1584,7 @@ export function runVerifyCli(rawArgs) {
     const allRoots = resolveAdditionalCodeRoots(codeRoot, specsDir);
     const codeFiles = allRoots.flatMap(r =>
       findFiles(r, (f, name) => {
-        return /\.(rs|ts|tsx|js|jsx|mjs|py|sh)$/.test(name) && !name.endsWith('.d.ts');
+        return /\.(rs|ts|tsx|js|jsx|mjs|py|sh|ps1|psm1|yml|yaml)$/.test(name) && !name.endsWith('.d.ts');
       })
     );
 
