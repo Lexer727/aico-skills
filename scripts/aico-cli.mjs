@@ -697,6 +697,8 @@ export function resolveAdditionalCodeRoots(codeDir, specsDir = null) {
   const roots = [path.resolve(codeDir)];
   const candidateManifests = [];
   if (specsDir) candidateManifests.push(path.resolve(specsDir, '.aico-project.json'));
+  candidateManifests.push(path.resolve(codeDir, '../../specs/aico-specs/.aico-project.json'));
+  candidateManifests.push(path.resolve(codeDir, '../specs/aico-specs/.aico-project.json'));
   candidateManifests.push(path.resolve(codeDir, '../../aico-specs/.aico-project.json'));
   candidateManifests.push(path.resolve(codeDir, '../aico-specs/.aico-project.json'));
 
@@ -1842,7 +1844,7 @@ export function runVerifyCli(rawArgs) {
 
 export function resolveCloneTargetDir({ workspaceRoot, repoId, type }) {
   if (type === 'specs') {
-    return path.resolve(workspaceRoot, repoId);
+    return path.resolve(workspaceRoot, 'specs', repoId);
   }
   return path.resolve(workspaceRoot, 'codebase', repoId);
 }
@@ -1897,6 +1899,8 @@ export function resolveRepoDir({ workspaceRoot, repoId, repoDir }) {
   }
   const candidates = [
     path.resolve(workspaceRoot, '.aico-project.json'),
+    path.resolve(workspaceRoot, 'specs', 'aico-specs', '.aico-project.json'),
+    path.resolve(workspaceRoot, 'specs', repoId, '.aico-project.json'),
     path.resolve(workspaceRoot, 'aico-specs', '.aico-project.json'),
     path.resolve(workspaceRoot, `${repoId}`, '.aico-project.json'),
   ];
@@ -1920,6 +1924,8 @@ export function resolveRepoDir({ workspaceRoot, repoId, repoDir }) {
   }
 
   if (repoId.endsWith('-specs') || repoId === 'specs') {
+    const nested = path.resolve(workspaceRoot, 'specs', repoId);
+    if (fs.existsSync(nested)) return nested;
     return path.resolve(workspaceRoot, repoId);
   }
   return path.resolve(workspaceRoot, 'codebase', repoId);
